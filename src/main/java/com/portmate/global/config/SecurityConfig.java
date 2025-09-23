@@ -66,7 +66,7 @@ public class SecurityConfig {
         http.httpBasic(AbstractHttpConfigurer::disable);
         http
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/login","/users/register").permitAll()
+                        .requestMatchers("/login","/users/register","/fcm-test/**","/fcm/**").permitAll()
                         .anyRequest().authenticated()
                 );
         http
@@ -88,7 +88,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(List.of("http://localhost:5173","http://localhost:63342"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-CSRF-TOKEN"));
         configuration.addExposedHeader("access");
