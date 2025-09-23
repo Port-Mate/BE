@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>FCM PWA Push Test</title>
+    <link rel="manifest" href="/manifest.json">
+</head>
+<body>
+<h1>🚀 FCM PWA 웹푸시 테스트</h1>
+<button id="request-btn">알림 권한 요청 & 토큰 등록</button>
+<p id="token"></p>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDwHKbyXY2YqiV1dwClKArYz8NqOLPJH3o",
+        authDomain: "fcmtest-2eeed.firebaseapp.com",
+        projectId: "fcmtest-2eeed",
+        storageBucket: "fcmtest-2eeed.appspot.com",
+        messagingSenderId: "903263294981",
+        appId: "1:903263294981:web:c7c45f4fdd279a17deee6c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+
+    async function requestPermission() {
+        try {
+            const token = await getToken(messaging, { vapidKey: "BMZob3RD84dgKDOLfGpl2HeHt9dXAVP8Ri4sGOKcH0awCUF37IerFKWmvBy7gg-EKa5N5xBMC85g6FnLBkxjQdM" });
+            document.getElementById("token").innerText = token;
+
+            await fetch("/api/fcm/TEST_USER/token", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: token, platform: "web" })
+            });
+
+            alert("토큰 등록 완료!");
+        } catch (err) {
+            console.error("권한 요청 실패:", err);
+        }
+    }
+
+    onMessage(messaging, (payload) => {
+        alert("알림 도착: " + payload.notification.title + " - " + payload.notification.body);
+    });
+
+    document.getElementById("request-btn").addEventListener("click", requestPermission);
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+            .then(() => console.log("서비스워커 등록 완료"))
+            .catch(err => console.error("서비스워커 등록 실패:", err));
+    }
+</script>
+</body>
+</html>
