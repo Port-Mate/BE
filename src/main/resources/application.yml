@@ -1,0 +1,73 @@
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  cache:
+    type: redis
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017
+      database: portmate
+    redis:
+      host: localhost
+      port: 6379
+      username: ${REDIS_USERNAME}
+      password: ${REDIS_PASSWORD}
+      timeout: 6000ms
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+
+  jackson:
+    time-zone: Asia/Seoul
+
+
+#
+#  mail:
+#    host: smtp.gmail.com
+#    port: 587
+#    username: project.doctalk@gmail.com
+#    password: ${MAIL_PASSWORD}
+#    properties:
+#      mail:
+#        smtp:
+#          auth: true
+#          starttls:
+#            enable: true
+#          ssl:
+#            enable: false
+#      debug: true
+#
+
+jwt:
+  issuer: project.doctalk@gmail.com
+  secret: "jfsgkhdsjkweoiruwqejkrfbhnsadkjlfghbwerqewrsdfgdsfagbdf"
+  access-expiration: 3600
+  refresh-expiration: 8640
+
+server:
+  port: 8080
+  address: 0.0.0.0
+  max-http-header-size: 16KB
+  servlet:
+    context-path: /api
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+    min-response-size: 1024 # 1KB ??? ??? ?? ??
+
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: DEBUG
+    org.springframework.security.web.FilterChainProxy: WARN
+
+
+springdoc:
+  default-produces-media-type: application/json
+  override-with-generic-response: false
+
