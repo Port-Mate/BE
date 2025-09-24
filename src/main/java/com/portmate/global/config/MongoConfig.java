@@ -11,7 +11,6 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import java.util.Arrays;
-import java.util.List;
 
 
 @Configuration

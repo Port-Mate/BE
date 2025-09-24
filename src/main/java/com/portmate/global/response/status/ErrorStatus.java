@@ -20,8 +20,10 @@ public enum ErrorStatus implements BaseStatusCode {
 
     // USER
     USER_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "USER_001", "이미 존재하는 사용자이며, 비밀번호가 틀렸습니다."),
-    USER_NOT_FOUND(HttpStatus.BAD_REQUEST, "USER_002", "해당 사용자를 찾을 수 없습니다.");
+    USER_NOT_FOUND(HttpStatus.BAD_REQUEST, "USER_002", "해당 사용자를 찾을 수 없습니다."),
 
+    // FILE
+    FILE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "FILE_001", "지원하지 않는 파일 형식입니다.");
 
 
     private final HttpStatus httpStatus;
