@@ -15,5 +15,4 @@ public class DateToLocalDateTimeKstConverter implements Converter<Date, LocalDat
     public LocalDateTime convert(Date date) {
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().minusHours(9);
     }
-
 }
