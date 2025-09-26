@@ -44,16 +44,23 @@
       }
 
       const formData = new FormData();
-      // 서버에서 @RequestParam("file") 혹은 @RequestPart("file") 로 받는다고 가정
       formData.append('file', file);
+
+      // JSON 데이터 추가
+      const requestPayload = {
+        portName: "부산항",        // 입력값에서 받아오기 가능
+        startDt: "2025-09-25",
+        endDt: "2025-09-30"
+      };
+      formData.append(
+        "request",
+        new Blob([JSON.stringify(requestPayload)], { type: "application/json" })
+      );
 
       try {
         const res = await fetch('http://localhost:8080/api/schedule', {
           method: 'POST',
           body: formData
-          // Spring Security에서 CSRF 활성화 + 브라우저 페이지가 동일 출처가 아닐 때는 CSRF 토큰 필요할 수 있음
-          // 동일 출처(같은 도메인/포트)에서 렌더링 시에는 기본적으로 쿠키 자격증명 필요 시 credentials 추가:
-          // credentials: 'include'
         });
 
         const contentType = res.headers.get('content-type') || '';
