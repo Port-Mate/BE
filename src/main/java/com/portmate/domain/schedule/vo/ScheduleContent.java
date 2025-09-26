@@ -1,28 +1,27 @@
-package com.portmate.domain.schedule.entity;
+package com.portmate.domain.schedule.vo;
 
-import com.portmate.global.entity.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import nonapi.io.github.classgraph.json.Id;
 
 import java.util.List;
+import java.util.UUID;
 
-@Document(collection = "schedule_contents")
-@Getter
 @Builder
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScheduleContent extends BaseEntity {
+public class ScheduleContent{
     @Id
-    private String scheduleContentId;
+    private String id;
     private String column;
     private List<String> data;
 
     public static ScheduleContent create(String column, List<String> data){
         return ScheduleContent.builder()
+                .id(UUID.randomUUID().toString())
                 .column(column)
                 .data(data)
                 .build();

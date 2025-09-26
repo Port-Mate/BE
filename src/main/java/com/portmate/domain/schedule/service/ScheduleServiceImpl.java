@@ -1,8 +1,10 @@
 package com.portmate.domain.schedule.service;
 
-import com.portmate.domain.schedule.entity.ScheduleContent;
+import com.portmate.domain.schedule.dto.request.ScheduleCreateRequest;
+import com.portmate.domain.schedule.entity.Schedule;
 import com.portmate.domain.schedule.exception.FileNotSupportException;
-import com.portmate.domain.schedule.repository.ScheduleContentRepository;
+import com.portmate.domain.schedule.repository.ScheduleRepository;
+import com.portmate.domain.schedule.vo.ScheduleContent;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -16,21 +18,25 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.portmate.domain.schedule.util.ExcelUtil.*;
+import static com.portmate.domain.schedule.util.ExcelUtil.isNotExcel;
 
 @Service
 @RequiredArgsConstructor
-public class ScheduleContentServiceImpl implements ScheduleContentService{
-    private final ScheduleContentRepository scheduleContentRepository;
-
+public class ScheduleServiceImpl implements ScheduleService{
+    private final ScheduleRepository scheduleRepository;
 
     @Override
-    public void uploadExcel(MultipartFile file) throws IOException {
+    public Schedule uploadExcel(MultipartFile file, ScheduleCreateRequest request) throws IOException {
         if (isNotExcel(file)) {
             throw new FileNotSupportException();
         }
+
+        Schedule schedule = Schedule.create(request);
+
         List<ScheduleContent> result = parseExcel(file);
-        scheduleContentRepository.saveAll(result);
+        schedule.addScheduleContents(result);
+        scheduleRepository.save(schedule);
+        return schedule;
     }
 
     private List<ScheduleContent> parseExcel(MultipartFile file) throws IOException {
@@ -55,5 +61,4 @@ public class ScheduleContentServiceImpl implements ScheduleContentService{
 
         return scheduleContents;
     }
-
 }

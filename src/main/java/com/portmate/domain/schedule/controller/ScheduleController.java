@@ -1,11 +1,9 @@
 package com.portmate.domain.schedule.controller;
 
-import com.portmate.domain.schedule.service.ScheduleContentService;
+import com.portmate.domain.schedule.dto.request.ScheduleCreateRequest;
+import com.portmate.domain.schedule.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -14,10 +12,11 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @RequestMapping("/schedule")
 public class ScheduleController {
-    private final ScheduleContentService scheduleContentService;
+    private final ScheduleService scheduleService;
 
     @PostMapping
-    public void upload(@RequestParam("file") MultipartFile file) throws IOException {
-        scheduleContentService.uploadExcel(file);
+    public void upload(@RequestPart("file") MultipartFile file,
+                       @RequestPart("request") ScheduleCreateRequest request) throws IOException {
+        scheduleService.uploadExcel(file, request);
     }
 }

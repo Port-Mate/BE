@@ -1,9 +1,9 @@
 package com.portmate.domain.schedule.repository;
 
-import com.portmate.domain.schedule.entity.ScheduleContent;
+import com.portmate.domain.schedule.entity.Schedule;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ScheduleContentRepository extends MongoRepository<ScheduleContent, String> {
+public interface ScheduleRepository extends MongoRepository<Schedule, String> {
 }
