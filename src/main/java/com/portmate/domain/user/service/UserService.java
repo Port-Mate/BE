@@ -22,11 +22,7 @@ public class UserService {
 
     @Transactional
     public void insertNewUser(RegisterRequest registerRequest){
-        User newUser = User.builder()
-                .name(registerRequest.name())
-                .email(registerRequest.email())
-                .password(encoder.encode(registerRequest.password()))
-                .build();
+        User newUser = User.create(registerRequest, encoder.encode(registerRequest.password()));
 
         userRepository.save(newUser);
     }
