@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PortMate 알림 테스트</title>
+    <!-- EventSource Polyfill -->
+    <script src="https://unpkg.com/event-source-polyfill@1.0.26/eventsource.min.js"></script>
+    <script>
+        // EventSourcePolyfill 로딩 확인
+        window.addEventListener('load', function() {
+            if (typeof EventSourcePolyfill === 'undefined') {
+                console.error('EventSourcePolyfill이 로드되지 않았습니다.');
+                // 대체 방법으로 네이티브 EventSource 사용
+                window.EventSourcePolyfill = window.EventSource;
+            }
+        });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+        
+        .section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(86, 171, 47, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.connecting {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        #log {
+            border: 2px solid #e0e0e0;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            background: #fff;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        .log-entry.info {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .log-entry.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .log-entry.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .log-entry.notification {
+            background: #fff3e0;
+            color: #ef6c00;
+            border-left: 4px solid #ff9800;
+        }
+        
+        .notification-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .notification-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .notification-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .notification-item.read {
+            opacity: 0.6;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .notification-body {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .notification-meta {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔔 PortMate 알림 테스트</h1>
+            <p>Server-Sent Events (SSE) 기반 실시간 알림 시스템 테스트</p>
+        </div>
+        
+        <div class="content">
+            <!-- JWT 토큰 설정 -->
+            <div class="section">
+                <h3>🔑 인증 설정</h3>
+                <div class="form-group">
+                    <label for="jwtToken">JWT 토큰:</label>
+                    <input type="text" id="jwtToken" placeholder="JWT 토큰을 입력하세요" 
+                           value="eyJhbGciOiJIUzI1NiJ9.eyJjYXRlZ29yeSI6ImFjY2VzcyIsImVtYWlsIjoiZHVndWRhZGEwMUBuYXZlci5jb20iLCJpYXQiOjE3NTk0Nzg1OTgsImV4cCI6MTc1OTQ3OTE5OH0.1-7Y2Bwx496_bMVs42Sjck_s0jL9vVoBN1_d2jqj768">
+                    <small style="color: #666; font-size: 12px;">💡 로그인 API로 새 토큰을 발급받아 입력하세요</small>
+                </div>
+                <div class="form-group">
+                    <label for="userId">사용자 ID:</label>
+                    <input type="text" id="userId" placeholder="테스트할 사용자 ID" value="68d2718bf25692e6e1d3c2f1" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="loginEmail">로그인 이메일:</label>
+                    <input type="email" id="loginEmail" placeholder="이메일을 입력하세요" value="dugudada01@naver.com">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">비밀번호:</label>
+                    <input type="password" id="loginPassword" placeholder="비밀번호를 입력하세요" value="password123">
+                </div>
+                <button class="btn btn-success" onclick="login()">로그인하여 토큰 발급</button>
+            </div>
+            
+            <!-- 연결 상태 -->
+            <div id="connectionStatus" class="status disconnected">
+                🔴 연결되지 않음
+            </div>
+            
+            <!-- 컨트롤 버튼 -->
+            <div class="section">
+                <h3>🎮 컨트롤</h3>
+                <button class="btn btn-primary" onclick="connect()" id="connectBtn">SSE 구독 시작</button>
+                <button class="btn btn-danger" onclick="disconnect()" id="disconnectBtn" disabled>연결 해제</button>
+                <button class="btn btn-success" onclick="sendNotification()">알림 발행</button>
+                <button class="btn btn-warning" onclick="getUnread()">읽지 않은 알림 조회</button>
+                <button class="btn btn-warning" onclick="markAsRead()">읽음 처리</button>
+                <button class="btn btn-primary" onclick="clearLog()">로그 지우기</button>
+                <button class="btn btn-success" onclick="testConnection()">연결 테스트</button>
+                <button class="btn btn-warning" onclick="validateToken()">토큰 검증</button>
+            </div>
+            
+            <div class="grid">
+                <!-- 알림 발행 폼 -->
+                <div class="section">
+                    <h3>📤 알림 발행</h3>
+                    <div class="form-group">
+                        <label for="notificationTitle">제목:</label>
+                        <input type="text" id="notificationTitle" placeholder="알림 제목" value="테스트 알림">
+                    </div>
+                    <div class="form-group">
+                        <label for="notificationBody">내용:</label>
+                        <textarea id="notificationBody" rows="3" placeholder="알림 내용">이건 테스트 알림 본문입니다</textarea>
+                    </div>
+                </div>
+                
+                <!-- 읽지 않은 알림 목록 -->
+                <div class="section">
+                    <h3>📥 읽지 않은 알림</h3>
+                    <div id="unreadNotifications" class="notification-list">
+                        <p style="text-align: center; color: #999; padding: 20px;">알림을 조회해보세요</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 로그 -->
+            <div class="section">
+                <h3>📋 실시간 로그</h3>
+<div id="log"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const baseUrl = "http://localhost:8080/api/notifications";
+    let eventSource;
+    let unreadNotifications = [];
+
+    // 🔧 유틸리티 함수들
+    function getJwtToken() {
+        return document.getElementById("jwtToken").value.trim();
+    }
+
+    function getUserId() {
+        return document.getElementById("userId").value.trim();
+    }
+
+    function updateConnectionStatus(status, message) {
+        const statusDiv = document.getElementById("connectionStatus");
+        statusDiv.className = `status ${status}`;
+        statusDiv.innerHTML = message;
+    }
+
+    function updateButtonStates(connected) {
+        document.getElementById("connectBtn").disabled = connected;
+        document.getElementById("disconnectBtn").disabled = !connected;
+    }
+
+    function log(message, type = "info") {
+        const logDiv = document.getElementById("log");
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement("div");
+        logEntry.className = `log-entry ${type}`;
+        logEntry.innerHTML = `[${timestamp}] ${message}`;
+        logDiv.appendChild(logEntry);
+        logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function clearLog() {
+        document.getElementById("log").innerHTML = "";
+        log("로그가 지워졌습니다.", "info");
+    }
+
+    // 🔌 SSE 구독
+    function connect() {
+        const token = getJwtToken();
+        if (!token) {
+            log("❌ JWT 토큰을 입력해주세요.", "error");
+            return;
+        }
+
+        if (eventSource) {
+            eventSource.close();
+        }
+
+        updateConnectionStatus("connecting", "🟡 연결 중...");
+        log("SSE 연결을 시도합니다...", "info");
+        log(`연결 URL: ${baseUrl}/subscribe`, "info");
+        log(`JWT 토큰: ${token.substring(0, 20)}...`, "info");
+
+        // 먼저 일반 HTTP 요청으로 연결 테스트
+        fetch(baseUrl + "/subscribe", {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + token,
+                "Accept": "text/event-stream"
+            }
+        })
+        .then(response => {
+            log(`HTTP 응답 상태: ${response.status} ${response.statusText}`, "info");
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.text();
+        })
+        .then(data => {
+            log(`HTTP 응답 데이터: ${data.substring(0, 100)}...`, "info");
+        })
+        .catch(err => {
+            log(`❌ HTTP 연결 테스트 실패: ${err.message}`, "error");
+        });
+
+        // SSE 연결 시도
+        try {
+            // EventSourcePolyfill 사용 가능 여부 확인
+            if (typeof EventSourcePolyfill === 'undefined') {
+                log("⚠️ EventSourcePolyfill을 사용할 수 없어 네이티브 EventSource를 사용합니다.", "info");
+                // 네이티브 EventSource는 헤더를 지원하지 않으므로 URL에 토큰 포함
+                eventSource = new EventSource(baseUrl + "/subscribe?token=" + encodeURIComponent(token));
+            } else {
+                eventSource = new EventSourcePolyfill(baseUrl + "/subscribe", {
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
+            }
+
+            eventSource.onopen = () => {
+                updateConnectionStatus("connected", "🟢 SSE 연결됨");
+                updateButtonStates(true);
+                log("✅ SSE 연결이 성공했습니다!", "success");
+            };
+
+            eventSource.addEventListener("INIT", e => {
+                log(`INIT: ${e.data}`, "info");
+            });
+
+            eventSource.addEventListener("notification", e => {
+                log(`🔔 새 알림 수신: ${e.data}`, "notification");
+                // 새 알림 수신 알림만 표시 (자동 조회 제거)
+            });
+
+        eventSource.onerror = (err) => {
+                updateConnectionStatus("disconnected", "🔴 연결 실패");
+                updateButtonStates(false);
+                log(`❌ SSE 연결 오류: ${JSON.stringify(err)}`, "error");
+                log(`연결 URL: ${baseUrl}/subscribe`, "error");
+                log(`토큰 길이: ${token.length}`, "error");
+            };
+
+            // 연결 타임아웃 설정
+            setTimeout(() => {
+                if (eventSource && eventSource.readyState !== EventSource.OPEN) {
+                    log("❌ SSE 연결 타임아웃 (10초)", "error");
+                    disconnect();
+                }
+            }, 10000);
+
+        } catch (err) {
+            updateConnectionStatus("disconnected", "🔴 연결 실패");
+            updateButtonStates(false);
+            log(`❌ SSE 연결 예외: ${err.message}`, "error");
+        }
+    }
+
+    // 🔌 SSE 연결 해제
+    function disconnect() {
+        if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+        }
+        updateConnectionStatus("disconnected", "🔴 연결 해제됨");
+        updateButtonStates(false);
+        log("연결이 해제되었습니다.", "info");
+    }
+
+    // 📤 알림 발행
+    function sendNotification() {
+        const token = getJwtToken();
+        const userId = getUserId();
+        const title = document.getElementById("notificationTitle").value.trim();
+        const body = document.getElementById("notificationBody").value.trim();
+
+        if (!token || !userId || !title || !body) {
+            log("❌ 모든 필드를 입력해주세요.", "error");
+            return;
+        }
+
+        log("알림을 발행합니다...", "info");
+
+        fetch(baseUrl + "/send", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({
+                userId: userId,
+                title: title,
+                body: body
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            log(`📤 알림 발행 성공: ${JSON.stringify(data)}`, "success");
+        })
+        .catch(err => {
+            log(`❌ 알림 발행 실패: ${err.message}`, "error");
+        });
+    }
+
+    // 📥 읽지 않은 알림 조회
+    function getUnread() {
+        const token = getJwtToken();
+        if (!token) {
+            log("❌ JWT 토큰을 입력해주세요.", "error");
+            return;
+        }
+
+        log("읽지 않은 알림을 조회합니다...", "info");
+
+        fetch(baseUrl + "/unread", {
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            log(`📥 읽지 않은 알림 조회 성공: ${JSON.stringify(data)}`, "success");
+            
+            // 응답 구조 확인 및 안전한 접근 (ApiResponse 구조: {code, message, result, isSuccess})
+            let notifications = [];
+            
+            // 강제로 data.result 사용 (JSON에서 이미 확인됨)
+            if (data && data.result) {
+                notifications = data.result;
+                log(`✅ data.result에서 ${notifications.length}개 알림 발견`, "success");
+            } else if (data && data.data && Array.isArray(data.data)) {
+                notifications = data.data;
+                log(`✅ data.data 배열에서 ${notifications.length}개 알림 발견`, "success");
+            } else if (data && Array.isArray(data)) {
+                notifications = data;
+                log(`✅ data 배열에서 ${notifications.length}개 알림 발견`, "success");
+            } else {
+                log(`⚠️ 예상하지 못한 응답 구조입니다. data: ${JSON.stringify(data)}`, "error");
+                notifications = [];
+            }
+            
+            log(`📥 최종 읽지 않은 알림: ${notifications.length}개`, "success");
+            log(`📥 unreadNotifications 배열 설정 전: ${unreadNotifications ? unreadNotifications.length : 'undefined'}`, "info");
+            unreadNotifications = notifications;
+            log(`📥 unreadNotifications 배열 설정 후: ${unreadNotifications ? unreadNotifications.length : 'undefined'}`, "info");
+            displayUnreadNotifications();
+        })
+        .catch(err => {
+            log(`❌ 읽지 않은 알림 조회 실패: ${err.message}`, "error");
+        });
+    }
+
+    // 📋 읽지 않은 알림 목록 표시
+    function displayUnreadNotifications() {
+        const container = document.getElementById("unreadNotifications");
+        
+        if (!unreadNotifications || unreadNotifications.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">읽지 않은 알림이 없습니다</p>';
+            return;
+        }
+
+        container.innerHTML = unreadNotifications.map(notification => {
+            // 안전한 속성 접근
+            const id = notification.id || notification._id || 'N/A';
+            const title = notification.title || '제목 없음';
+            const body = notification.body || '내용 없음';
+            const isRead = notification.read || notification.isRead || false;
+            const createdAt = notification.createdAt ? new Date(notification.createdAt).toLocaleString() : '날짜 없음';
+            
+            return `
+                <div class="notification-item ${isRead ? 'read' : ''}" data-id="${id}">
+                    <div class="notification-title">${title}</div>
+                    <div class="notification-body">${body}</div>
+                    <div class="notification-meta">
+                        ID: ${id} | 
+                        생성일: ${createdAt} |
+                        ${isRead ? '읽음' : '읽지 않음'}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ✅ 알림 읽음 처리 (배치)
+    function markAsRead() {
+        const token = getJwtToken();
+        if (!token) {
+            log("❌ JWT 토큰을 입력해주세요.", "error");
+            return;
+        }
+
+        log(`🔍 읽음 처리 시작 - 현재 알림 개수: ${unreadNotifications ? unreadNotifications.length : 0}`, "info");
+
+        if (!unreadNotifications || unreadNotifications.length === 0) {
+            log("❌ 읽음 처리할 알림이 없습니다. 먼저 '읽지 않은 알림 조회'를 해주세요.", "error");
+            log("💡 자동으로 읽지 않은 알림을 조회합니다...", "info");
+            // 자동으로 읽지 않은 알림 조회 후 다시 시도
+            getUnread();
+            setTimeout(() => {
+                log("🔄 다시 읽음 처리를 시도합니다...", "info");
+                markAsRead();
+            }, 2000);
+            return;
+        }
+
+        // 디버깅: 각 알림의 상태 확인
+        log(`🔍 전체 알림 개수: ${unreadNotifications.length}`, "info");
+        unreadNotifications.forEach((n, index) => {
+            log(`알림 ${index + 1}: id=${n.id || n._id}, read=${n.read}, isRead=${n.isRead}`, "info");
+        });
+
+        // 필터링 과정을 단계별로 확인
+        const step1 = unreadNotifications.filter(n => n);
+        log(`🔍 Step1 - null 체크 후: ${step1.length}개`, "info");
+        
+        const step2 = step1.filter(n => (n.isRead === false || n.read === false));
+        log(`🔍 Step2 - 읽지 않음 필터링 후: ${step2.length}개`, "info");
+        
+        const step3 = step2.map(n => n.id || n._id);
+        log(`🔍 Step3 - ID 추출 후: ${JSON.stringify(step3)}`, "info");
+        
+        const unreadIds = step3.filter(id => id);
+        log(`🔍 Step4 - null ID 제거 후: ${JSON.stringify(unreadIds)}`, "info");
+
+        if (unreadIds.length === 0) {
+            log("❌ 모든 알림이 이미 읽음 처리되었습니다.", "error");
+            return;
+        }
+
+        log(`${unreadIds.length}개의 알림을 읽음 처리합니다...`, "info");
+        log(`🔍 API 요청 URL: ${baseUrl}/read`, "info");
+        log(`🔍 요청 데이터: ${JSON.stringify(unreadIds)}`, "info");
+        log(`🔍 토큰 길이: ${token.length}`, "info");
+
+        // 요청 전 상태 확인
+        log("🚀 fetch 요청을 시작합니다...", "info");
+
+        fetch(baseUrl + "/read", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify(unreadIds)
+        })
+        .then(response => {
+            log(`📡 서버 응답 받음: ${response.status} ${response.statusText}`, "info");
+            log(`📡 응답 헤더: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`, "info");
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            log(`✅ ${unreadIds.length}개 알림 읽음 처리 완료`, "success");
+            log(`📡 서버 응답 데이터: ${JSON.stringify(data)}`, "info");
+            // 읽음 처리 완료 (자동 갱신 제거 - 사용자가 직접 조회)
+        })
+        .catch(err => {
+            log(`❌ 읽음 처리 실패: ${err.message}`, "error");
+            log(`❌ 에러 스택: ${err.stack}`, "error");
+            
+            // 네트워크 에러인지 확인
+            if (err.name === 'TypeError' && err.message.includes('fetch')) {
+                log(`❌ 네트워크 연결 문제일 수 있습니다. 서버가 실행 중인지 확인하세요.`, "error");
+            }
+        });
+    }
+
+    // 🚀 페이지 로드 시 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+        log("PortMate 알림 테스트 페이지가 로드되었습니다.", "info");
+        log("JWT 토큰을 입력하고 'SSE 구독 시작' 버튼을 클릭하세요.", "info");
+        
+        // JWT 토큰 입력 필드에 포커스
+        document.getElementById("jwtToken").focus();
+    });
+
+    // 🔧 연결 테스트 함수
+    function testConnection() {
+        const token = getJwtToken();
+        if (!token) {
+            log("❌ JWT 토큰을 입력해주세요.", "error");
+            return;
+        }
+
+        log("🔧 연결 테스트를 시작합니다...", "info");
+        
+        // 1. 기본 서버 연결 테스트
+        fetch("http://localhost:8080/api/actuator/health", {
+            method: "GET"
+        })
+        .then(response => {
+            log(`서버 상태: ${response.status} ${response.statusText}`, "info");
+            return response.text();
+        })
+        .then(data => {
+            log(`서버 응답: ${data}`, "info");
+        })
+        .catch(err => {
+            log(`❌ 서버 연결 실패: ${err.message}`, "error");
+        });
+
+        // 2. 알림 엔드포인트 테스트
+        fetch(baseUrl + "/unread", {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        })
+        .then(response => {
+            log(`알림 엔드포인트 상태: ${response.status} ${response.statusText}`, "info");
+            if (response.status === 401) {
+                log("❌ JWT 토큰이 유효하지 않습니다.", "error");
+            } else if (response.status === 403) {
+                log("❌ 접근 권한이 없습니다.", "error");
+            } else if (response.status === 404) {
+                log("❌ 알림 엔드포인트를 찾을 수 없습니다.", "error");
+            }
+            return response.text();
+        })
+        .then(data => {
+            log(`알림 엔드포인트 응답: ${data.substring(0, 200)}...`, "info");
+        })
+        .catch(err => {
+            log(`❌ 알림 엔드포인트 테스트 실패: ${err.message}`, "error");
+        });
+
+        // 3. SSE 엔드포인트 테스트
+        fetch(baseUrl + "/subscribe", {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + token,
+                "Accept": "text/event-stream",
+                "Cache-Control": "no-cache"
+            }
+        })
+        .then(response => {
+            log(`SSE 엔드포인트 상태: ${response.status} ${response.statusText}`, "info");
+            log(`Content-Type: ${response.headers.get('Content-Type')}`, "info");
+            if (response.status === 200) {
+                log("✅ SSE 엔드포인트가 정상적으로 응답합니다.", "success");
+            }
+            return response.text();
+        })
+        .then(data => {
+            log(`SSE 엔드포인트 응답: ${data.substring(0, 200)}...`, "info");
+        })
+        .catch(err => {
+            log(`❌ SSE 엔드포인트 테스트 실패: ${err.message}`, "error");
+        });
+    }
+
+    // 🔐 로그인 함수
+    function login() {
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value.trim();
+
+        if (!email || !password) {
+            log("❌ 이메일과 비밀번호를 입력해주세요.", "error");
+            return;
+        }
+
+        log("🔐 로그인을 시도합니다...", "info");
+
+        fetch("http://localhost:8080/api/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
+        })
+        .then(response => {
+            log(`로그인 응답 상태: ${response.status} ${response.statusText}`, "info");
+            
+            // 쿠키에서 토큰 추출
+            const cookies = response.headers.get('Set-Cookie');
+            if (cookies) {
+                log(`쿠키 정보: ${cookies}`, "info");
+            }
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            // 응답 본문이 있는지 확인
+            const contentType = response.headers.get('Content-Type');
+            log(`Content-Type: ${contentType}`, "info");
+
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                // JSON이 아닌 경우 텍스트로 읽기
+                return response.text().then(text => {
+                    log(`응답 본문: ${text}`, "info");
+                    // 쿠키에서 토큰 추출 시도
+                    if (cookies) {
+                        const accessTokenMatch = cookies.match(/access=([^;]+)/);
+                        if (accessTokenMatch) {
+                            const token = accessTokenMatch[1];
+                            document.getElementById("jwtToken").value = token;
+                            log("✅ 쿠키에서 JWT 토큰을 추출하여 설정했습니다!", "success");
+                            return { success: true, token: token };
+                        }
+                    }
+                    throw new Error("응답에서 토큰을 찾을 수 없습니다.");
+                });
+            }
+        })
+        .then(data => {
+            if (data && data.success) {
+                log("✅ 로그인 성공!", "success");
+            } else if (data) {
+                log(`로그인 성공: ${JSON.stringify(data)}`, "success");
+                
+                // 응답에서 토큰 추출 (응답 구조에 따라 수정 필요)
+                if (data.data && data.data.access) {
+                    document.getElementById("jwtToken").value = data.data.access;
+                    log("✅ JWT 토큰이 자동으로 설정되었습니다!", "success");
+                } else if (data.access) {
+                    document.getElementById("jwtToken").value = data.access;
+                    log("✅ JWT 토큰이 자동으로 설정되었습니다!", "success");
+                } else {
+                    log("⚠️ 응답에서 토큰을 찾을 수 없습니다. 수동으로 입력해주세요.", "error");
+                }
+            }
+        })
+        .catch(err => {
+            log(`❌ 로그인 실패: ${err.message}`, "error");
+        });
+    }
+
+    // 🔍 JWT 토큰 검증 함수
+    function validateToken() {
+        const token = getJwtToken();
+        if (!token) {
+            log("❌ JWT 토큰을 입력해주세요.", "error");
+            return;
+        }
+
+        log("🔍 JWT 토큰을 검증합니다...", "info");
+        
+        try {
+            // JWT 토큰 구조 확인
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+                log("❌ JWT 토큰 형식이 올바르지 않습니다. (3개 부분으로 구성되어야 함)", "error");
+                return;
+            }
+
+            // 헤더 디코딩
+            const header = JSON.parse(atob(parts[0]));
+            log(`토큰 헤더: ${JSON.stringify(header)}`, "info");
+
+            // 페이로드 디코딩
+            const payload = JSON.parse(atob(parts[1]));
+            log(`토큰 페이로드: ${JSON.stringify(payload)}`, "info");
+
+            // 만료 시간 확인
+            const now = Math.floor(Date.now() / 1000);
+            if (payload.exp && payload.exp < now) {
+                log(`❌ 토큰이 만료되었습니다. (만료시간: ${new Date(payload.exp * 1000).toLocaleString()})`, "error");
+            } else if (payload.exp) {
+                log(`✅ 토큰이 유효합니다. (만료시간: ${new Date(payload.exp * 1000).toLocaleString()})`, "success");
+            }
+
+            // 사용자 정보 확인
+            if (payload.email) {
+                log(`사용자 이메일: ${payload.email}`, "info");
+            }
+            if (payload.userId) {
+                log(`사용자 ID: ${payload.userId}`, "info");
+            }
+
+        } catch (err) {
+            log(`❌ 토큰 디코딩 실패: ${err.message}`, "error");
+        }
+
+        // 서버에서 토큰 검증
+        fetch(baseUrl + "/unread", {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        })
+        .then(response => {
+            if (response.status === 401) {
+                log("❌ 서버에서 토큰이 유효하지 않다고 응답했습니다.", "error");
+            } else if (response.status === 200) {
+                log("✅ 서버에서 토큰이 유효하다고 응답했습니다.", "success");
+            } else {
+                log(`서버 응답 상태: ${response.status} ${response.statusText}`, "info");
+            }
+            return response.text();
+        })
+        .then(data => {
+            log(`서버 응답: ${data.substring(0, 200)}...`, "info");
+        })
+        .catch(err => {
+            log(`❌ 서버 토큰 검증 실패: ${err.message}`, "error");
+        });
+    }
+
+    // 🔄 페이지 언로드 시 연결 정리
+    window.addEventListener('beforeunload', function() {
+        if (eventSource) {
+            eventSource.close();
+        }
+    });
+</script>
+</body>
+</html>
+
