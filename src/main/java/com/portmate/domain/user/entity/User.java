@@ -2,6 +2,7 @@ package com.portmate.domain.user.entity;
 
 
 import com.portmate.domain.user.dto.RegisterRequest;
+import com.portmate.domain.user.dto.UserStatusRequest;
 import com.portmate.global.entity.BaseEntity;
 import lombok.*;
 import org.springframework.data.annotation.Id;
@@ -51,6 +52,10 @@ public class User extends BaseEntity {
                 .userStatus(UserStatus.PENDING)
                 .userRole(request.userRole())
                 .build();
+    }
+
+    public void updateStatus(UserStatusRequest request){
+        this.userStatus = request.userStatus();
     }
 }
 
