@@ -66,7 +66,7 @@ public class SecurityConfig {
         http.httpBasic(AbstractHttpConfigurer::disable);
         http
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/login","/users/register","/fcm-test/**","/fcm/**").permitAll()
+                        .requestMatchers("/login","/users/register","/fcm-test/**","/fcm/**", "**").permitAll()
                         .anyRequest().authenticated()
                 );
         http

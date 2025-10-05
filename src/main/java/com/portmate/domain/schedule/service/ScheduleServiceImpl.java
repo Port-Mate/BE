@@ -1,8 +1,10 @@
 package com.portmate.domain.schedule.service;
 
 import com.portmate.domain.schedule.dto.request.ScheduleCreateRequest;
+import com.portmate.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.portmate.domain.schedule.entity.Schedule;
 import com.portmate.domain.schedule.exception.FileNotSupportException;
+import com.portmate.domain.schedule.exception.ScheduleNotFoundException;
 import com.portmate.domain.schedule.repository.ScheduleRepository;
 import com.portmate.domain.schedule.vo.ScheduleContent;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,12 @@ public class ScheduleServiceImpl implements ScheduleService{
         schedule.addScheduleContents(result);
         scheduleRepository.save(schedule);
         return schedule;
+    }
+
+    @Override
+    public ScheduleDetailResponse queryByScheduleId(String scheduleId) {
+        Schedule schedule = scheduleRepository.findById(scheduleId).orElseThrow(ScheduleNotFoundException::new);
+        return ScheduleDetailResponse.from(schedule);
     }
 
     private List<ScheduleContent> parseExcel(MultipartFile file) throws IOException {
