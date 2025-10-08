@@ -1,6 +1,8 @@
 package com.portmate.domain.schedule.controller;
 
+import com.portmate.domain.berth.service.BerthAssignmentService;
 import com.portmate.domain.schedule.dto.request.ScheduleCreateRequest;
+import com.portmate.domain.schedule.dto.response.AssignedShipResponse;
 import com.portmate.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.portmate.domain.schedule.service.ScheduleService;
 import com.portmate.global.response.ApiResponse;
@@ -10,12 +12,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/schedule")
 public class ScheduleController {
     private final ScheduleService scheduleService;
+    private final BerthAssignmentService berthAssignmentService;
 
     @GetMapping("/{scheduleId}")
     public ResponseEntity<ApiResponse<ScheduleDetailResponse>> getByScheduleId(@PathVariable String scheduleId) {
@@ -26,5 +30,9 @@ public class ScheduleController {
     public void upload(@RequestPart("file") MultipartFile file,
                        @RequestPart("request") ScheduleCreateRequest request) throws IOException {
         scheduleService.uploadExcel(file, request);
+    }
+    @GetMapping("/{scheduleId}/assign")
+    public List<AssignedShipResponse> assign(@PathVariable String scheduleId) {
+        return berthAssignmentService.assignByScheduleId(scheduleId);
     }
 }
