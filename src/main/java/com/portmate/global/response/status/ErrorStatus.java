@@ -24,6 +24,8 @@ public enum ErrorStatus implements BaseStatusCode {
 
     // Schedule
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "SCHEDULE_001", "조건을 만족하는 일정을 찾을 수 없습니다."),
+    SCHEDULE_INVALID_START_DT(HttpStatus.BAD_REQUEST, "SCHEDULE_002", "엑셀에 포함된 ETA 날짜 중 스케줄 시작 일자 범위에 포함되지 않는 값이 있습니다."),
+    SCHEDULE_INVALID_END_DT(HttpStatus.BAD_REQUEST, "SCHEDULE_003", "엑셀에 포함된 ETD 날짜 중 스케줄 종료 일자 범위에 포함되지 않는 값이 있습니다."),
 
     // FILE
     FILE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "FILE_001", "지원하지 않는 파일 형식입니다."),
