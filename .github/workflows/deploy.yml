@@ -46,7 +46,6 @@ jobs:
       - name: Docker 인증 구성
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
-
       - name: Docker 이미지 빌드 및 푸시
         run: |
           IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest"
@@ -63,20 +62,24 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            echo '${{ secrets.GCP_SA_KEY }}' > gcp_sa_key.json
-            cat gcp_sa_key.json | sudo docker login -u _json_key --password-stdin https://${{ env.REGION }}-docker.pkg.dev
             cd /home/${{ secrets.VM_USER }}/portmate
-            
+
+            echo "GCP 인증 중..."
+            echo "${{ secrets.GCP_SA_KEY }}" > gcp_sa_key.json
+            cat gcp_sa_key.json | sudo docker login -u _json_key --password-stdin https://${{ env.REGION }}-docker.pkg.dev
+            rm -f gcp_sa_key.json
+
+            echo "컨테이너 중지 및 최신 이미지 pull"
             sudo docker compose pull
             sudo docker compose down
-            
-            sudo FIREBASE_JSON='${{ secrets.FIREBASE_JSON }}' \
-                 DATABASE_PASSWORD='${{ secrets.DATABASE_PASSWORD }}' \
-                 PROJECT_ID='${{ secrets.GCP_PROJECT_ID }}' \
-                 REPO_NAME='${{ secrets.ARTIFACT_REPO }}' \
-                 docker compose up -d
-            
-            rm -f gcp_sa_key.json
+
+            echo "환경 변수 주입 후 재시작"
+            sudo -E bash -c "
+              export FIREBASE_JSON='${{ secrets.FIREBASE_JSON }}'
+              export DATABASE_PASSWORD='${{ secrets.DATABASE_PASSWORD }}'
+              export PROJECT_ID='${{ secrets.GCP_PROJECT_ID }}'
+              export REPO_NAME='${{ secrets.ARTIFACT_REPO }}'
+              docker compose up -d
+            "
+
             echo "배포 완료"
-      
-      
