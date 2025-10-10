@@ -30,7 +30,7 @@ jobs:
             echo "ERROR: JAR file not found!"
             exit 1
           fi
-          echo "JAR file found successfully"
+          echo "JAR file found successfully "
 
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
@@ -43,11 +43,23 @@ jobs:
       - name: Configure Docker Auth
         run: gcloud auth configure-docker us-central1-docker.pkg.dev
 
+
+      - name: Verify GCP Authentication
+        run: |
+          echo "==> Checking gcloud authentication..."
+          gcloud auth list
+          echo "==> Verifying Docker login..."
+          docker login -u oauth2accesstoken -p "$(gcloud auth print-access-token)" https://us-central1-docker.pkg.dev
+          echo "GCP & Docker authentication successful"
+
       - name: Build & Push Docker Image
         run: |
           IMAGE="us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/portmate-server:latest"
+          echo "==> Building image: $IMAGE"
           docker build -t $IMAGE .
+          echo "==> Pushing image to Artifact Registry..."
           docker push $IMAGE
+          echo "Image pushed successfully!"
 
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.2.0
@@ -56,7 +68,9 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
+            echo "==> Connecting to VM and deploying container..."
             cd /home/${{ secrets.VM_USER }}/portmate
             docker pull us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/portmate-server:latest
             docker compose down
             docker compose up -d
+            echo "Deployment finished successfully!"
