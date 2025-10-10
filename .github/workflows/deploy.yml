@@ -60,7 +60,7 @@ jobs:
     needs: CI
 
     steps:
-      - name: 서버에 SSH 접속하여 Docker Compose 실행
+      - name: 서버에 SSH 접속하여 Docker 실행
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.VM_IP }}
@@ -77,20 +77,36 @@ jobs:
             cat gcp_sa_key.json | sudo docker login -u _json_key --password-stdin https://$REGION-docker.pkg.dev
             rm -f gcp_sa_key.json
 
-            cd /home/${{ secrets.VM_USER }}/portmate
+            echo "==== Redis, Kafka, App 재시작 ===="
+            sudo docker stop portmate kafka zookeeper redis || true
+            sudo docker rm portmate kafka zookeeper redis || true
 
-            echo "==== 최신 이미지 Pull ===="
-            sudo docker compose pull
+            sudo docker run -d --name redis -p 6379:6379 --restart always redis:latest redis-server --appendonly yes --requirepass 1234
+            sudo docker run -d --name zookeeper -p 2181:2181 --restart always wurstmeister/zookeeper:latest
+            sudo docker run -d --name kafka -p 9092:9092 --restart always \
+              -e KAFKA_BROKER_ID=1 \
+              -e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 \
+              -e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 \
+              -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://$(hostname -i):9092 \
+              -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT \
+              -e KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT \
+              -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
+              --link zookeeper:zookeeper \
+              wurstmeister/kafka:latest
 
-            echo "==== 컨테이너 중지 ===="
-            sudo docker compose down
-
-            echo "==== 환경변수 주입 후 재실행 ===="
-            sudo env \
-              FIREBASE_JSON='${{ secrets.FIREBASE_JSON }}' \
-              DATABASE_PASSWORD='${{ secrets.DATABASE_PASSWORD }}' \
-              PROJECT_ID='${{ secrets.GCP_PROJECT_ID }}' \
-              REPO_NAME='${{ secrets.ARTIFACT_REPO }}' \
-              docker compose up -d
+            sudo docker run -d --name portmate -p 8080:8080 --restart always \
+              --link redis:redis \
+              --link kafka:kafka \
+              -e SPRING_PROFILES_ACTIVE=prod \
+              -e SPRING_CONFIG_LOCATION=classpath:/application.yml \
+              -e SPRING_DATA_REDIS_HOST=redis \
+              -e SPRING_DATA_REDIS_PORT=6379 \
+              -e SPRING_DATA_REDIS_PASSWORD=1234 \
+              -e SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092 \
+              -e DATABASE_PASSWORD='${{ secrets.DATABASE_PASSWORD }}' \
+              -e FIREBASE_JSON='${{ secrets.FIREBASE_JSON }}' \
+              -e PROJECT_ID='${{ secrets.GCP_PROJECT_ID }}' \
+              -e REPO_NAME='${{ secrets.ARTIFACT_REPO }}' \
+              us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/portmate-server:latest
 
             echo "✅ 배포 완료"
