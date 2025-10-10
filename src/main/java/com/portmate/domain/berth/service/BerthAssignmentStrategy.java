@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 @Component
@@ -27,26 +26,19 @@ public class BerthAssignmentStrategy {
 		Map<String, List<Berth>> pierToBerths
 	) {
 		List<AssignedShipResponse> result = new ArrayList<>();
-		int vesselCount = scheduleContents.get(0).getData().size();
-
 		Map<String, List<AssignmentSlot>> berthScheduleMap = new HashMap<>();
 
-
-		List<Map<String, String>> vessels = new ArrayList<>();
-		for (int i = 0; i < vesselCount; i++) {
-			vessels.add(extractRow(scheduleContents, i));
-		}
-		vessels.sort(
+		scheduleContents.sort(
 			Comparator
-				.comparing((Map<String, String> v) -> DateParser.parse(v.get("ETA (입항 예정)")))
-				.thenComparing(v -> parseIMO(v.get("IMO / Call Sign")))
+				.comparing((ScheduleContent v) -> DateParser.parse(v.getEta()))
+				.thenComparing(v -> parseIMO(v.getImoOrCallSign()))
 		);
 
-		for (Map<String, String> row : vessels) {
-			String vesselName = row.get("선박명 (Vessel Name)");
-			String cargoType = row.get("화물 종류 (Cargo Type)");
-			LocalDateTime eta = DateParser.parse(row.get("ETA (입항 예정)"));
-			LocalDateTime etd = DateParser.parse(row.get("ETD (출항 예정)"));
+		for (ScheduleContent content : scheduleContents) {
+			String vesselName = content.getVesselName();
+			String cargoType = content.getCargoType();
+			LocalDateTime eta = DateParser.parse(content.getEta());
+			LocalDateTime etd = DateParser.parse(content.getEtd());
 
 		ShipType shipType = mapToShipType(cargoType);
 		PortRegion region = mapToRegion(portName);
@@ -152,14 +144,6 @@ public class BerthAssignmentStrategy {
 		}
 
 		return null;
-	}
-
-	private Map<String, String> extractRow(List<ScheduleContent> contents, int index) {
-		return contents.stream()
-			.collect(Collectors.toMap(
-				ScheduleContent::getColumn,
-				c -> c.getData().size() > index ? c.getData().get(index).trim() : ""
-			));
 	}
 
 	private ShipType mapToShipType(String cargoType) {
