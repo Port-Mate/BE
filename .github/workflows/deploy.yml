@@ -8,11 +8,12 @@ on:
 env:
   REGION: us-central1
   IMAGE_NAME: portmate-server
+  IMAGE_TAG: ${{ github.sha }}
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REPO_NAME: ${{ secrets.ARTIFACT_REPO }}
 
 jobs:
-  build-and-deploy:
+  CI:
     runs-on: ubuntu-latest
 
     steps:
@@ -36,7 +37,7 @@ jobs:
             echo "JAR 파일을 찾을 수 없습니다."
             exit 1
           fi
-          echo "JAR 파일 확인 완료"
+          echo "✅ JAR 파일 확인 완료"
 
       - name: GCP 인증
         uses: google-github-actions/auth@v2
@@ -51,29 +52,40 @@ jobs:
           IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest"
           echo "이미지 빌드 중: $IMAGE"
           docker build -t $IMAGE .
-          echo "Artifact Registry로 이미지 푸시 중..."
           docker push $IMAGE
-          echo "이미지 푸시 완료"
+          echo "✅ Artifact Registry로 이미지 푸시 완료"
 
-      - name: VM 서버 배포
-        uses: appleboy/ssh-action@v1.2.0
+  CD:
+    runs-on: ubuntu-latest
+    needs: CI
+
+    steps:
+      - name: 서버에 SSH 접속하여 Docker Compose 실행
+        uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
+            REGION=us-central1
+            IMAGE_NAME=portmate-server
+            PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}
+            REPO_NAME=${{ secrets.ARTIFACT_REPO }}
+
+            echo "==== GCP Artifact Registry 로그인 ===="
+            echo '${{ secrets.GCP_SA_KEY }}' > gcp_sa_key.json
+            cat gcp_sa_key.json | sudo docker login -u _json_key --password-stdin https://$REGION-docker.pkg.dev
+            rm -f gcp_sa_key.json
+
             cd /home/${{ secrets.VM_USER }}/portmate
 
-            echo "GCP 인증 중..."
-            echo "${{ secrets.GCP_SA_KEY }}" > /tmp/gcp_sa_key.json
-            cat /tmp/gcp_sa_key.json | sudo docker login -u _json_key --password-stdin https://${{ env.REGION }}-docker.pkg.dev
-            rm -f /tmp/gcp_sa_key.json
-
-            echo "컨테이너 중지 및 최신 이미지 pull"
-            sudo docker compose down || true
+            echo "==== 최신 이미지 Pull ===="
             sudo docker compose pull
 
-            echo "환경 변수 주입 후 재시작"
+            echo "==== 컨테이너 중지 ===="
+            sudo docker compose down
+
+            echo "==== 환경변수 주입 후 재실행 ===="
             sudo env \
               FIREBASE_JSON='${{ secrets.FIREBASE_JSON }}' \
               DATABASE_PASSWORD='${{ secrets.DATABASE_PASSWORD }}' \
@@ -81,5 +93,4 @@ jobs:
               REPO_NAME='${{ secrets.ARTIFACT_REPO }}' \
               docker compose up -d
 
-            echo "배포 완료"
-      
+            echo "✅ 배포 완료"
