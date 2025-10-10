@@ -34,7 +34,7 @@ jobs:
 
       - name: Build & Push Docker Image
         run: |
-          IMAGE="asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/portmate-server:latest"
+          IMAGE="us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/portmate-server:latest"
           docker build -t $IMAGE .
           docker push $IMAGE
 
