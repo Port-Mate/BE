@@ -91,6 +91,10 @@ jobs:
               -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT \
               -e KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT \
               -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
+              -e KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1 \
+              -e KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1 \
+              -e KAFKA_DEFAULT_REPLICATION_FACTOR=1 \
+              -e KAFKA_AUTO_CREATE_TOPICS_ENABLE=true \
               --link zookeeper:zookeeper \
               wurstmeister/kafka:latest
 
