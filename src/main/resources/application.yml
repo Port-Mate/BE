@@ -37,6 +37,7 @@ spring:
     listener:
       ack-mode: record
       missing-topics-fatal: false
+      concurrency: 3
 
 
 
