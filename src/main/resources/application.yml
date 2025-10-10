@@ -6,13 +6,12 @@ spring:
     type: redis
   data:
     mongodb:
-      uri: mongodb://localhost:27017
+      uri: mongodb+srv://gijin22:${DATABASE_PASSWORD}@cluster0.uwirm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
       database: portmate
     redis:
-      host: localhost
+      host: redis
       port: 6379
-      username: ${REDIS_USERNAME}
-      password: ${REDIS_PASSWORD}
+      password: 1234
       timeout: 6000ms
 
   servlet:
@@ -25,7 +24,7 @@ spring:
     time-zone: Asia/Seoul
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -87,3 +86,6 @@ springdoc:
   default-produces-media-type: application/json
   override-with-generic-response: false
 
+
+firebase:
+  json: ${FIREBASE_JSON}
