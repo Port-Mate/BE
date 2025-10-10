@@ -46,6 +46,7 @@ jobs:
       - name: Docker 인증 구성
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
+
       - name: Docker 이미지 빌드 및 푸시
         run: |
           IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest"
