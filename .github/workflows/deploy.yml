@@ -72,7 +72,7 @@ jobs:
             REPO_NAME=${{ secrets.ARTIFACT_REPO }}
             FIREBASE_JSON=${{ secrets.FIREBASE_JSON }}
             DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
-            EOF
+            EOF'
 
             sudo docker compose pull
             sudo docker compose down
