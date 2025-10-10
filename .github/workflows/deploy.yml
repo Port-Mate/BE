@@ -66,9 +66,14 @@ jobs:
             echo '${{ secrets.GCP_SA_KEY }}' > gcp_sa_key.json
             cat gcp_sa_key.json | sudo docker login -u _json_key --password-stdin https://${{ env.REGION }}-docker.pkg.dev
             cd /home/${{ secrets.VM_USER }}/portmate
+            
             sudo docker compose pull
             sudo docker compose down
-            FIREBASE_JSON='${{ secrets.FIREBASE_JSON }}' sudo -E docker compose up -d
+            
+            FIREBASE_JSON='${{ secrets.FIREBASE_JSON }}' \
+            DATABASE_PASSWORD='${{ secrets.DATABASE_PASSWORD }}' \
+            sudo -E docker compose up -d
+            
             rm -f gcp_sa_key.json
             echo "배포 완료"
       
