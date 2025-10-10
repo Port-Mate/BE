@@ -67,7 +67,7 @@ jobs:
             cat gcp_sa_key.json | sudo docker login -u _json_key --password-stdin https://${{ env.REGION }}-docker.pkg.dev
             cd /home/${{ secrets.VM_USER }}/portmate
 
-            sudo bash -c 'cat <<EOF > .env
+            sudo bash -c 'cat > .env <<'"'"'EOF'"'"'
             PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}
             REPO_NAME=${{ secrets.ARTIFACT_REPO }}
             FIREBASE_JSON=${{ secrets.FIREBASE_JSON }}
