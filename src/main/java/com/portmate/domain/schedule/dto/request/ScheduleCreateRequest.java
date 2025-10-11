@@ -3,5 +3,5 @@ package com.portmate.domain.schedule.dto.request;
 import java.time.LocalDate;
 
 public record ScheduleCreateRequest(
-        String portName, LocalDate startDt, LocalDate endDt ) {
+        String pier, String berth, LocalDate startDt, LocalDate endDt ) {
 }
