@@ -51,6 +51,9 @@ public class ScheduleContent {
     // 비고 (Remark)
     private String remark;
 
+    private String pier;
+    private String berth;
+
     public static ScheduleContent from(CSVRecord record) {
         return ScheduleContent.builder()
                 .id(UUID.randomUUID().toString())
