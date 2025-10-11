@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -91,6 +92,13 @@ public class BerthAssignmentStrategy {
                 List<AssignmentSlot> slots = berthScheduleMap.getOrDefault(bestBerth.getId(), new ArrayList<>());
                 slots.add(bestSlot);
                 berthScheduleMap.put(bestBerth.getId(), slots);
+                
+                // ScheduleContent에 pier, berth, 조정된 시간 반영
+                schedule.setPier(assignedPier.getPierName());
+                schedule.setBerth(assignedBerth.getName());
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+                schedule.setEta(finalEta.format(formatter));
+                schedule.setEtd(finalEtd.format(formatter));
             }
 
             result.add(new AssignedShipResponse(

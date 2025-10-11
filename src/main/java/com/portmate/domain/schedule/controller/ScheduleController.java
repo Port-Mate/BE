@@ -46,7 +46,7 @@ public class ScheduleController {
     }
 
     @GetMapping("/{scheduleId}/assign")
-    public List<AssignedShipResponse> assign(@PathVariable String scheduleId) {
-        return berthAssignmentService.assignByScheduleId(scheduleId);
+    public ResponseEntity<ApiResponse<List<AssignedShipResponse>>> assign(@PathVariable String scheduleId) {
+        return ResponseEntity.ok(ApiResponse.onSuccess(berthAssignmentService.assignByScheduleId(scheduleId)));
     }
 }

@@ -31,7 +31,12 @@ public enum ErrorStatus implements BaseStatusCode {
     FILE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "FILE_001", "지원하지 않는 파일 형식입니다."),
 
     //Notification
-    NOTIFICATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "NOTIFICATION_001", "해당 알림을 찾을 수 없습니다.");
+    NOTIFICATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "NOTIFICATION_001", "해당 알림을 찾을 수 없습니다."),
+
+    // Berth Change
+    INVALID_BERTH_PLACEMENT(HttpStatus.BAD_REQUEST, "BERTH_CHANGE_001", "유효하지 않은 선석 배치입니다."),
+    CHANGE_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "BERTH_CHANGE_002", "변경 요청을 찾을 수 없습니다."),
+    CANNOT_CANCEL_REQUEST(HttpStatus.BAD_REQUEST, "BERTH_CHANGE_003", "취소할 수 없는 상태의 요청입니다.");
 
 
     private final HttpStatus httpStatus;

@@ -35,9 +35,14 @@ public class BerthAssignmentService {
 		Map<String, List<Berth>> pierToBerths = berthRepository.findAll().stream()
 			.collect(Collectors.groupingBy(Berth::getPierId));
 
-		return assignmentStrategy.assign(schedule.getScheduleContents(),
+		List<AssignedShipResponse> result = assignmentStrategy.assign(schedule.getScheduleContents(),
 			schedule.getPier(),
 			piers,
 			pierToBerths);
+		
+
+		scheduleRepository.save(schedule);
+		
+		return result;
 	}
 }

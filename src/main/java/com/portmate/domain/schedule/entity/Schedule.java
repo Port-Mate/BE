@@ -31,7 +31,6 @@ public class Schedule extends BaseEntity {
     public static Schedule create(ScheduleCreateRequest request){
         return Schedule.builder()
                 .pier(request.pier())
-                .berth(request.berth())
                 .startDt(request.startDt())
                 .endDt(request.endDt())
                 .build();
