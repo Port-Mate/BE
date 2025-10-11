@@ -3,7 +3,8 @@ package com.portmate.domain.schedule.controller;
 import com.portmate.domain.berth.service.BerthAssignmentService;
 import com.portmate.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.portmate.domain.schedule.dto.response.AssignedShipResponse;
-import com.portmate.domain.schedule.dto.response.ScheduleDetailResponse;
+import com.portmate.domain.schedule.dto.response.ScheduleListResponse;
+import com.portmate.domain.schedule.dto.response.TimeTableHoverResponse;
 import com.portmate.domain.schedule.service.ScheduleService;
 import com.portmate.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -21,9 +23,20 @@ public class ScheduleController {
     private final ScheduleService scheduleService;
     private final BerthAssignmentService berthAssignmentService;
 
-    @GetMapping("/{scheduleId}")
-    public ResponseEntity<ApiResponse<ScheduleDetailResponse>> getByScheduleId(@PathVariable String scheduleId) {
-        return ResponseEntity.ok(ApiResponse.onSuccess(scheduleService.queryByScheduleId(scheduleId)));
+    @GetMapping("/{contentId}")
+    public ResponseEntity<ApiResponse<TimeTableHoverResponse>> getByScheduleId(@PathVariable String contentId) {
+        return ResponseEntity.ok(ApiResponse.onSuccess(scheduleService.queryContentByContentId(contentId)));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<ScheduleListResponse>> listSchedules(
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate,
+            @RequestParam String pier,
+            @RequestParam String berth) {
+        return ResponseEntity.ok(ApiResponse.onSuccess(
+                scheduleService.queryByListParams(startDate, endDate, pier, berth))
+        );
     }
 
     @PostMapping
@@ -31,6 +44,7 @@ public class ScheduleController {
                        @RequestPart("request") ScheduleCreateRequest request) throws IOException {
         scheduleService.uploadExcel(file, request);
     }
+
     @GetMapping("/{scheduleId}/assign")
     public List<AssignedShipResponse> assign(@PathVariable String scheduleId) {
         return berthAssignmentService.assignByScheduleId(scheduleId);
