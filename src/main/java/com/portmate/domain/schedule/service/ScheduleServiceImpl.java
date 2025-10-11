@@ -1,16 +1,15 @@
 package com.portmate.domain.schedule.service;
 
 import com.portmate.domain.schedule.dto.request.ScheduleCreateRequest;
-import com.portmate.domain.schedule.dto.response.ScheduleDetailResponse;
+import com.portmate.domain.schedule.dto.response.ScheduleListResponse;
+import com.portmate.domain.schedule.dto.response.TimeTableHoverResponse;
 import com.portmate.domain.schedule.entity.Schedule;
 import com.portmate.domain.schedule.exception.FileNotSupportException;
 import com.portmate.domain.schedule.exception.ScheduleInvalidEndException;
 import com.portmate.domain.schedule.exception.ScheduleInvalidStartException;
 import com.portmate.domain.schedule.exception.ScheduleNotFoundException;
 import com.portmate.domain.schedule.repository.ScheduleRepository;
-import com.portmate.domain.schedule.vo.ScheduleContent;
-import com.portmate.domain.schedule.vo.TimeTableContent;
-import com.portmate.domain.schedule.vo.TimeTableWrapper;
+import com.portmate.domain.schedule.vo.*;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -23,10 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import static com.portmate.domain.schedule.util.ExcelUtil.isNotExcel;
 
@@ -50,10 +46,16 @@ public class ScheduleServiceImpl implements ScheduleService{
     }
 
     @Override
-    public ScheduleDetailResponse queryByScheduleId(String scheduleId) {
-        Schedule schedule = scheduleRepository.findById(scheduleId).orElseThrow(ScheduleNotFoundException::new);
+    public TimeTableHoverResponse queryContentByContentId(String contentId) {
+        ScheduleContent schedule = scheduleRepository.findByContentId(contentId);
+        return TimeTableHoverResponse.from(schedule);
+    }
+
+    @Override
+    public ScheduleListResponse queryByListParams(LocalDate startDate, LocalDate endDate, String pier, String berth) {
+        Schedule schedule = scheduleRepository.findByListParams(startDate, endDate, pier, berth);
         List<TimeTableWrapper> items = toTimeTable(schedule);
-        return ScheduleDetailResponse.from(schedule, items);
+        return ScheduleListResponse.from(schedule, items);
     }
 
     private List<TimeTableWrapper> toTimeTable(Schedule schedule) {
@@ -66,19 +68,7 @@ public class ScheduleServiceImpl implements ScheduleService{
                 String etaDate = sc.getEta().substring(0, 10);
                 groupedByDate
                         .computeIfAbsent(etaDate, k -> new ArrayList<>())
-                        .add(TimeTableContent.builder()
-                                .no(sc.getNo())
-                                .vesselName(sc.getVesselName())
-                                .imoOrCallSign(sc.getImoOrCallSign())
-                                .voyageNo(sc.getVoyageNo())
-                                .etaTime(sc.getEta().substring(11)) // HH:mm
-                                .fromPort(sc.getFromPort())
-                                .nextPort(sc.getNextPort())
-                                .cargoType(sc.getCargoType())
-                                .tonnage(sc.getTonnage())
-                                .flag(sc.getFlag())
-                                .remark(sc.getRemark())
-                                .build());
+                        .add(TimeTableContent.from(sc));
             }
 
             // ETD
@@ -86,19 +76,7 @@ public class ScheduleServiceImpl implements ScheduleService{
                 String etdDate = sc.getEtd().substring(0, 10);
                 groupedByDate
                         .computeIfAbsent(etdDate, k -> new ArrayList<>())
-                        .add(TimeTableContent.builder()
-                                .no(sc.getNo())
-                                .vesselName(sc.getVesselName())
-                                .imoOrCallSign(sc.getImoOrCallSign())
-                                .voyageNo(sc.getVoyageNo())
-                                .etdTime(sc.getEtd().substring(11)) // HH:mm
-                                .fromPort(sc.getFromPort())
-                                .nextPort(sc.getNextPort())
-                                .cargoType(sc.getCargoType())
-                                .tonnage(sc.getTonnage())
-                                .flag(sc.getFlag())
-                                .remark(sc.getRemark())
-                                .build());
+                        .add(TimeTableContent.from(sc));
             }
         }
 
@@ -106,6 +84,7 @@ public class ScheduleServiceImpl implements ScheduleService{
                 .map(entry -> new TimeTableWrapper(entry.getKey(), entry.getValue()))
                 .toList();
     }
+
 
     private List<ScheduleContent> parseExcel(MultipartFile file, ScheduleCreateRequest request) throws IOException {
         List<ScheduleContent> scheduleContents = new ArrayList<>();
