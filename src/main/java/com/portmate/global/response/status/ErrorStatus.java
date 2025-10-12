@@ -36,7 +36,12 @@ public enum ErrorStatus implements BaseStatusCode {
     // Berth Change
     INVALID_BERTH_PLACEMENT(HttpStatus.BAD_REQUEST, "BERTH_CHANGE_001", "유효하지 않은 선석 배치입니다."),
     CHANGE_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "BERTH_CHANGE_002", "변경 요청을 찾을 수 없습니다."),
-    CANNOT_CANCEL_REQUEST(HttpStatus.BAD_REQUEST, "BERTH_CHANGE_003", "취소할 수 없는 상태의 요청입니다.");
+    CANNOT_CANCEL_REQUEST(HttpStatus.BAD_REQUEST, "BERTH_CHANGE_003", "취소할 수 없는 상태의 요청입니다."),
+
+    // Schedule Version Review
+    UNAUTHORIZED_REVIEW(HttpStatus.FORBIDDEN, "VERSION_REVIEW_001", "해당 버전을 승인/거부할 권한이 없습니다."),
+    VERSION_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "VERSION_REVIEW_002", "이미 처리된 버전입니다."),
+    VERSION_NOT_APPROVED(HttpStatus.BAD_REQUEST, "VERSION_REVIEW_003", "승인되지 않은 버전은 스케줄에 적용할 수 없습니다.");
 
 
     private final HttpStatus httpStatus;
