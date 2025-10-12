@@ -56,4 +56,41 @@ public class ScheduleVersionController {
         return ResponseEntity.ok(ApiResponse.onSuccess(response));
     }
 
+    
+    @PostMapping("/{versionId}/approve")
+    public ResponseEntity<ApiResponse<ReviewActionResponse>> approveVersion(
+            @PathVariable String versionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody ReviewActionRequest request
+    ) {
+        ReviewActionResponse response = scheduleVersionService.approveVersion(
+                versionId, 
+                userDetails.getEmail(),
+                request
+        );
+        return ResponseEntity.ok(ApiResponse.onSuccess(response));
+    }
+    
+    @PostMapping("/{versionId}/reject")
+    public ResponseEntity<ApiResponse<ReviewActionResponse>> rejectVersion(
+            @PathVariable String versionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody ReviewActionRequest request
+    ) {
+        ReviewActionResponse response = scheduleVersionService.rejectVersion(
+                versionId, 
+                userDetails.getEmail(),
+                request
+        );
+        return ResponseEntity.ok(ApiResponse.onSuccess(response));
+    }
+    
+    @PostMapping("/{versionId}/apply")
+    public ResponseEntity<ApiResponse<ScheduleApplyResponse>> applyVersionToSchedule(
+            @PathVariable String versionId
+    ) {
+        ScheduleApplyResponse response = scheduleVersionService.applyVersionToSchedule(versionId);
+        return ResponseEntity.ok(ApiResponse.onSuccess(response));
+    }
+
 }

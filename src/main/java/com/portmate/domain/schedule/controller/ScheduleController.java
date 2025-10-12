@@ -45,7 +45,7 @@ public class ScheduleController {
         scheduleService.uploadExcel(file, request);
     }
 
-    @GetMapping("/{scheduleId}/assign")
+    @PostMapping("/{scheduleId}/assign")
     public ResponseEntity<ApiResponse<List<AssignedShipResponse>>> assign(@PathVariable String scheduleId) {
         return ResponseEntity.ok(ApiResponse.onSuccess(berthAssignmentService.assignByScheduleId(scheduleId)));
     }
