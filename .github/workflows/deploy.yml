@@ -77,32 +77,45 @@ jobs:
             cat gcp_sa_key.json | sudo docker login -u _json_key --password-stdin https://$REGION-docker.pkg.dev
             rm -f gcp_sa_key.json
 
-            echo "==== Redis, Kafka, App 재시작 ===="
+            echo "==== 기존 컨테이너 정리 ===="
             sudo docker stop portmate kafka zookeeper redis || true
             sudo docker rm portmate kafka zookeeper redis || true
 
-            sudo docker run -d --name redis -p 6379:6379 --restart always redis:latest redis-server --appendonly yes --requirepass 1234
-            sudo docker run -d --name zookeeper -p 2181:2181 --restart always wurstmeister/zookeeper:latest
-            sudo docker run -d --name kafka -p 9092:9092 --restart always \
+            echo "==== Docker 네트워크 생성 ===="
+            sudo docker network create portmate-net || true
+
+            echo "==== Redis 실행 ===="
+            sudo docker run -d --name redis --network portmate-net \
+              -p 6379:6379 --restart always \
+              redis:latest redis-server --appendonly yes --requirepass 1234
+
+            echo "==== Zookeeper 실행 ===="
+            sudo docker run -d --name zookeeper --network portmate-net \
+              -p 2181:2181 --restart always wurstmeister/zookeeper:latest
+
+            echo "==== Kafka 실행 ===="
+            sudo docker run -d --name kafka --network portmate-net \
+              -p 9092:9092 --restart always \
               -e KAFKA_BROKER_ID=1 \
               -e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 \
               -e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 \
-              -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
+              -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092 \
               -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT \
               -e KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT \
               -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
               -e KAFKA_DEFAULT_REPLICATION_FACTOR=1 \
               -e KAFKA_AUTO_CREATE_TOPICS_ENABLE=true \
-              --link zookeeper:zookeeper \
               wurstmeister/kafka:latest
 
-            echo "==== 최신 이미지 Pull ===="
+            echo "==== Kafka 초기화 대기 (10초) ===="
+            sleep 10
+
+            echo "==== 최신 PortMate 이미지 Pull ===="
             sudo docker pull us-central1-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:latest
 
-            echo "==== PortMate 컨테이너 실행 ===="
-            sudo docker run -d --name portmate -p 8080:8080 --restart always \
-              --link redis:redis \
-              --link kafka:kafka \
+            echo "==== PortMate 실행 ===="
+            sudo docker run -d --name portmate --network portmate-net \
+              -p 8080:8080 --restart always \
               -e SPRING_PROFILES_ACTIVE=prod \
               -e SPRING_CONFIG_LOCATION=classpath:/application.yml \
               -e SPRING_DATA_REDIS_HOST=redis \
@@ -115,4 +128,4 @@ jobs:
               -e REPO_NAME='${{ secrets.ARTIFACT_REPO }}' \
               us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/portmate-server:latest
 
-            echo "✅ 배포 완료"
+            echo "✅ 배포 완료 (Redis + Kafka + Spring 모두 portmate-net 내 연결됨)"
