@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.portmate.docs.NotificationControllerDocs;
 import com.portmate.domain.notification.domain.Notification;
 import com.portmate.domain.notification.dto.NotificationPayload;
 import com.portmate.domain.notification.dto.NotificationResponse;
@@ -28,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/notifications")
-public class NotificationController {
+public class NotificationController implements NotificationControllerDocs {
 
 	private final KafkaProducer kafkaProducer;
 	private final NotificationSseService sseService;
