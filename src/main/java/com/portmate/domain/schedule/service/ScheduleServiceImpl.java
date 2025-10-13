@@ -52,8 +52,11 @@ public class ScheduleServiceImpl implements ScheduleService{
     }
 
     @Override
-    public ScheduleListResponse queryByListParams(LocalDate startDate, LocalDate endDate, String pier, String berth) {
-        Schedule schedule = scheduleRepository.findByListParams(startDate, endDate, pier, berth);
+    public ScheduleListResponse queryByListParams(LocalDate startDate, LocalDate endDate, String port,String pier, String berth) {
+        Schedule schedule = scheduleRepository.findByListParams(startDate, endDate, port, pier, berth);
+        if (schedule == null) {
+            throw new ScheduleNotFoundException();
+        }
         List<TimeTableWrapper> items = toTimeTable(schedule);
         return ScheduleListResponse.from(schedule, items);
     }
@@ -63,20 +66,20 @@ public class ScheduleServiceImpl implements ScheduleService{
 
         for (ScheduleContent sc : schedule.getScheduleContents()) {
 
-            // ETA
+            // ETA (입항)
             if (sc.getEta() != null) {
                 String etaDate = sc.getEta().substring(0, 10);
                 groupedByDate
                         .computeIfAbsent(etaDate, k -> new ArrayList<>())
-                        .add(TimeTableContent.from(sc));
+                        .add(TimeTableContent.fromArrival(sc));
             }
 
-            // ETD
+            // ETD (출항)
             if (sc.getEtd() != null) {
                 String etdDate = sc.getEtd().substring(0, 10);
                 groupedByDate
                         .computeIfAbsent(etdDate, k -> new ArrayList<>())
-                        .add(TimeTableContent.from(sc));
+                        .add(TimeTableContent.fromDeparture(sc));
             }
         }
 

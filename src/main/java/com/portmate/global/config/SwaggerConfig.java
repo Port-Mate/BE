@@ -38,7 +38,7 @@ public class SwaggerConfig {
 			.addSecuritySchemes("Authorization", apiKey);
 
 		return new OpenAPI()
-			.addServersItem(new Server().url(contextPath))
+			.addServersItem(new Server().url("/"))
 			.components(components)
 			.addSecurityItem(securityRequirement)
 			.info(apiInfo());

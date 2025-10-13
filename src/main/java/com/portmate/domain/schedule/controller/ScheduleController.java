@@ -33,10 +33,11 @@ public class ScheduleController implements ScheduleControllerDocs {
     public ResponseEntity<ApiResponse<ScheduleListResponse>> listSchedules(
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate,
+            @RequestParam String port,
             @RequestParam String pier,
             @RequestParam String berth) {
         return ResponseEntity.ok(ApiResponse.onSuccess(
-                scheduleService.queryByListParams(startDate, endDate, pier, berth))
+                scheduleService.queryByListParams(startDate, endDate, port, pier, berth))
         );
     }
 

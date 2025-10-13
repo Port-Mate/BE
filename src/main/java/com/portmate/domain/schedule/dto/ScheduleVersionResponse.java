@@ -19,8 +19,7 @@ import java.util.List;
 public class ScheduleVersionResponse {
     private String versionId;
     private String originalScheduleId;
-    private String pier;
-    private String berth;
+    private String port;
     private LocalDate startDt;
     private LocalDate endDt;
     private ScheduleVersion.VersionStatus status;

@@ -36,7 +36,7 @@ public class BerthAssignmentService {
 			.collect(Collectors.groupingBy(Berth::getPierId));
 
 		List<AssignedShipResponse> result = assignmentStrategy.assign(schedule.getScheduleContents(),
-			schedule.getPier(),
+			schedule.getPort(),
 			piers,
 			pierToBerths);
 		

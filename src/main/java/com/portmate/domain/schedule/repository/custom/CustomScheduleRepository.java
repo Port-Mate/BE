@@ -8,5 +8,5 @@ import java.util.Date;
 
 public interface CustomScheduleRepository {
     ScheduleContent findByContentId(String contentId);
-    Schedule findByListParams(LocalDate startDate, LocalDate endDate, String pier, String berth);
+    Schedule findByListParams(LocalDate startDate, LocalDate endDate, String port,String pier, String berth);
 }

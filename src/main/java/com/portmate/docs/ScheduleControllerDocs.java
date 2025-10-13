@@ -122,6 +122,8 @@ public interface ScheduleControllerDocs {
 		@RequestParam LocalDate startDate,
 		@Parameter(description = "조회 종료일", required = true, example = "2025-10-20")
 		@RequestParam LocalDate endDate,
+		@Parameter(description = "항만명", required = true, example = "여수항")
+		@RequestParam String port,
 		@Parameter(description = "부두명", required = true, example = "1부두")
 		@RequestParam String pier,
 		@Parameter(description = "선석명", required = true, example = "A-1")

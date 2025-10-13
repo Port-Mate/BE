@@ -12,5 +12,5 @@ import java.time.LocalDate;
 public interface ScheduleService {
     Schedule uploadExcel(MultipartFile file, ScheduleCreateRequest request) throws IOException;
     TimeTableHoverResponse queryContentByContentId(String contentId);
-    ScheduleListResponse queryByListParams(LocalDate startDate, LocalDate endDate, String pier, String berth);
+    ScheduleListResponse queryByListParams(LocalDate startDate, LocalDate endDate, String port,String pier, String berth);
 }
