@@ -7,11 +7,17 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+
+import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class SwaggerConfig {
+
+	@Value("${server.servlet.context-path:/api}")
+	private String contextPath;
 
 	@Bean
 	public OpenAPI openAPI() {
@@ -32,10 +38,24 @@ public class SwaggerConfig {
 			.addSecuritySchemes("Authorization", apiKey);
 
 		return new OpenAPI()
-			.addServersItem(new Server().url("/")) // 리버스 프록시 등일 때 베이스 경로
+			.addServersItem(new Server().url(contextPath))
 			.components(components)
 			.addSecurityItem(securityRequirement)
 			.info(apiInfo());
+	}
+	@Bean
+	public OpenApiCustomizer prependApiPrefix() {
+		return openApi -> {
+			var newPaths = new io.swagger.v3.oas.models.Paths();
+			openApi.getPaths().forEach((p, item) -> {
+				if (!p.startsWith(contextPath)) {
+					newPaths.addPathItem(contextPath + p, item);
+				} else {
+					newPaths.addPathItem(p, item);
+				}
+			});
+			openApi.setPaths(newPaths);
+		};
 	}
 
 	private Info apiInfo() {
