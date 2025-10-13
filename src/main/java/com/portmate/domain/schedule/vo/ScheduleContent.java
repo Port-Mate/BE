@@ -51,6 +51,13 @@ public class ScheduleContent {
     // 비고 (Remark)
     private String remark;
 
+    private String agent;
+
+    private String pier;
+    private String berth;
+
+
+
     public static ScheduleContent from(CSVRecord record) {
         return ScheduleContent.builder()
                 .id(UUID.randomUUID().toString())
@@ -66,6 +73,7 @@ public class ScheduleContent {
                 .tonnage(record.get("톤수 (Tonnage)"))
                 .flag(record.get("국적 (Flag)"))
                 .remark(record.get("비고 (Remark)"))
+                .agent(record.get("대리점"))
                 .build();
     }
 }

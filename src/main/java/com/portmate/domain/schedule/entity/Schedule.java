@@ -21,7 +21,8 @@ import java.util.List;
 public class Schedule extends BaseEntity {
     @Id
     private String scheduleId;
-    private String portName;
+    private String pier;
+    private String berth;
     private LocalDate startDt;
     private LocalDate endDt;
     private List<ScheduleContent> scheduleContents;
@@ -29,7 +30,7 @@ public class Schedule extends BaseEntity {
 
     public static Schedule create(ScheduleCreateRequest request){
         return Schedule.builder()
-                .portName(request.portName())
+                .pier(request.pier())
                 .startDt(request.startDt())
                 .endDt(request.endDt())
                 .build();
