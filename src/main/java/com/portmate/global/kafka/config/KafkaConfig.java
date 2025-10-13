@@ -1,7 +1,5 @@
 package com.portmate.global.kafka.config;
 
-import org.apache.kafka.clients.admin.AdminClientConfig;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -58,15 +56,4 @@ public class KafkaConfig {
 		return factory;
 	}
 
-	@Bean
-	public KafkaAdmin kafkaAdmin() {
-		Map<String, Object> config = new HashMap<>();
-		config.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-		return new KafkaAdmin(config);
-	}
-
-	@Bean
-	public NewTopic notificationTopic() {
-		return new NewTopic("notification-topic", 1, (short) 1);
-	}
 }
