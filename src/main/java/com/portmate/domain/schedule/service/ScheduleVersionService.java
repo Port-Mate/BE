@@ -143,8 +143,7 @@ public class ScheduleVersionService {
         ScheduleVersion version = ScheduleVersion.builder()
                 .versionId(UUID.randomUUID().toString())
                 .originalScheduleId(schedule.getScheduleId())
-                .pier(schedule.getPier())
-                .berth(schedule.getBerth())
+                .port(schedule.getPort())
                 .startDt(schedule.getStartDt())
                 .endDt(schedule.getEndDt())
                 .scheduleContents(updatedContents)
@@ -167,6 +166,7 @@ public class ScheduleVersionService {
     
 
     public ScheduleVersionResponse getScheduleVersion(String versionId) {
+
         ScheduleVersion version = versionRepository.findById(versionId)
                 .orElseThrow(() -> new GlobalException(ErrorStatus.SCHEDULE_NOT_FOUND));
         
@@ -205,8 +205,7 @@ public class ScheduleVersionService {
         return ScheduleVersionResponse.builder()
                 .versionId(version.getVersionId())
                 .originalScheduleId(version.getOriginalScheduleId())
-                .pier(version.getPier())
-                .berth(version.getBerth())
+                .port(version.getPort())
                 .startDt(version.getStartDt())
                 .endDt(version.getEndDt())
                 .status(version.getStatus())
@@ -465,8 +464,7 @@ public class ScheduleVersionService {
 
         Schedule updatedSchedule = Schedule.builder()
                 .scheduleId(originalSchedule.getScheduleId())
-                .pier(originalSchedule.getPier())
-                .berth(originalSchedule.getBerth())
+                .port(originalSchedule.getPort())
                 .startDt(originalSchedule.getStartDt())
                 .endDt(originalSchedule.getEndDt())
                 .scheduleContents(version.getScheduleContents())
