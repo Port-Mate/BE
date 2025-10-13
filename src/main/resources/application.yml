@@ -6,10 +6,10 @@ spring:
     type: redis
   data:
     mongodb:
-      uri: mongodb+srv://gijin22:${DATABASE_PASSWORD}@cluster0.uwirm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      uri: mongodb+srv://gijin22:IvLi4bufDsTLGeEY@cluster0.uwirm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
       database: portmate
     redis:
-      host: redis
+      host: localhost
       port: 6379
       password: 1234
       timeout: 6000ms
@@ -24,19 +24,33 @@ spring:
     time-zone: Asia/Seoul
 
   kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       acks: 1
+      properties:
+        max.in.flight.requests.per.connection: 1
     consumer:
       group-id: notification-group
       auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        session.timeout.ms: 30000
+        max.poll.interval.ms: 300000
     listener:
       ack-mode: record
       missing-topics-fatal: false
+    admin:
+      properties:
+        bootstrap.servers: kafka:9092
+    properties:
+      auto.create.topics.enable: true
+      default.replication.factor: 1
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
 
 
 
