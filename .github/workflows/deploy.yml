@@ -3,7 +3,7 @@ name: GCP Artifact Registry 자동 배포
 on:
   push:
     branches:
-      - test
+      - main
 
 env:
   REGION: us-central1
