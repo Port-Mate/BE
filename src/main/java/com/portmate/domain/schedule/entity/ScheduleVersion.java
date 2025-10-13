@@ -25,9 +25,7 @@ public class ScheduleVersion extends BaseEntity {
     
     private String originalScheduleId; // 원본 스케줄 참조
     
-    private String pier;
-    
-    private String berth;
+    private String port;
     
     private LocalDate startDt;
     
