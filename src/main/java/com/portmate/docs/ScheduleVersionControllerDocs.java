@@ -25,7 +25,7 @@ public interface ScheduleVersionControllerDocs {
 
 	@Operation(
 		summary = "스케줄 변경 검증", 
-		description = "스케줄 변경 요청 전에 유효성을 검증합니다. 선박 간 충돌, 계류장 크기 등을 검사합니다."
+		description = "스케줄 변경 요청 전에 유효성을 검증합니다. 선박 간 충돌을 검사합니다."
 	)
 	@ApiResponses(value = {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -166,7 +166,7 @@ public interface ScheduleVersionControllerDocs {
 					      "etd": "2025-10-13T17:00:00"
 					    }
 					  ],
-					  "comment": "화주 요청에 따른 계류장 변경"
+					  "comment": "화주 요청에 따른 선석 변경"
 					}
 					"""
 				)
@@ -202,7 +202,7 @@ public interface ScheduleVersionControllerDocs {
 					    "status": "PENDING",
 					    "createdBy": "user123",
 					    "createdByName": "홍길동",
-					    "comment": "화주 요청에 따른 계류장 변경",
+					    "comment": "화주 요청에 따른 선석 변경",
 					    "createdAt": "2025-10-13T15:30:00",
 					    "scheduleContents": [],
 					    "changedContents": [],
@@ -392,7 +392,7 @@ public interface ScheduleVersionControllerDocs {
 					name = "반려 요청 예시",
 					value = """
 					{
-					  "comment": "계류장 크기가 선박 톤수에 맞지 않습니다. 재검토 부탁드립니다."
+					  "comment": "그냥 싫어요"
 					}
 					"""
 				)

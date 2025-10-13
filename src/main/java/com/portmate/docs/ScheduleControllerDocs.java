@@ -88,7 +88,7 @@ public interface ScheduleControllerDocs {
 
 	@Operation(
 		summary = "스케줄 목록 조회", 
-		description = "기간, 부두, 계류장 조건으로 스케줄 목록을 조회합니다."
+		description = "기간, 부두, 선석 조건으로 스케줄 목록을 조회합니다."
 	)
 	@ApiResponses(value = {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -124,7 +124,7 @@ public interface ScheduleControllerDocs {
 		@RequestParam LocalDate endDate,
 		@Parameter(description = "부두명", required = true, example = "1부두")
 		@RequestParam String pier,
-		@Parameter(description = "계류장명", required = true, example = "A-1")
+		@Parameter(description = "선석명", required = true, example = "A-1")
 		@RequestParam String berth
 	);
 
@@ -163,13 +163,13 @@ public interface ScheduleControllerDocs {
 	) throws IOException;
 
 	@Operation(
-		summary = "계류장 자동 배정", 
-		description = "스케줄 ID로 선박들에 계류장을 자동으로 배정합니다."
+		summary = "선석 자동 배정",
+		description = "스케줄 ID로 선박들에 선석을 알고리즘을 통해 자동으로 배정합니다."
 	)
 	@ApiResponses(value = {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(
 			responseCode = "200", 
-			description = "계류장 배정 성공",
+			description = "선석 배정 성공",
 			content = @Content(
 				mediaType = "application/json",
 				examples = @ExampleObject(

@@ -164,8 +164,8 @@ public interface NotificationControllerDocs {
 					    },
 					    {
 					      "id": "673a1b2c3d4e5f6g7h8i9j1k",
-					      "title": "계류장 배정 완료",
-					      "body": "귀하의 선박에 계류장이 배정되었습니다.",
+					      "title": "선석 배정 완료",
+					      "body": "귀하의 선박에 선석이 배정되었습니다.",
 					      "isRead": false,
 					      "createdAt": "2025-10-13T10:15:00"
 					    }
