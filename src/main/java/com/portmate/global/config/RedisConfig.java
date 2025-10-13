@@ -1,6 +1,5 @@
 package com.portmate.global.config;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -32,23 +31,19 @@ public class RedisConfig {
     @Value("${spring.data.redis.port}")
     private int redisPort;
 
-    @Value("${spring.data.redis.username}")
-    private String redisUser;
-
     @Value("${spring.data.redis.password}")
     private String redisPassword;
 
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
-        // 기본 캐시 설정
         RedisCacheConfiguration cacheConfig = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(10))  // 캐시 만료 시간 설정 (10분)
-                .disableCachingNullValues()  // null 값 캐싱 방지
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
+            .entryTtl(Duration.ofMinutes(10))  // 캐시 만료 시간 (10분)
+            .disableCachingNullValues()
+            .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
 
         return RedisCacheManager.builder(redisConnectionFactory)
-                .cacheDefaults(cacheConfig)
-                .build();
+            .cacheDefaults(cacheConfig)
+            .build();
     }
 
     @Bean
@@ -61,20 +56,16 @@ public class RedisConfig {
     @Bean
     public RedissonClient redissonClient() {
         Config config = new Config();
+        String redisUrl = "redis://" + redisHost + ":" + redisPort;
 
-        String redisUrl = "redis://" +
-                redisHost + ":" + redisPort;
         config.useSingleServer()
-                .setAddress(redisUrl)
-                .setUsername(redisUser)
-                .setPassword(redisPassword)
-                .setConnectionMinimumIdleSize(2) // 최소 연결 유지
-                .setConnectionPoolSize(10); // 연결 풀 크기 설정
+            .setAddress(redisUrl)
+            .setPassword(redisPassword)   // username 제거
+            .setConnectionMinimumIdleSize(2)
+            .setConnectionPoolSize(10);
 
         return Redisson.create(config);
     }
-
-
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
@@ -99,5 +90,4 @@ public class RedisConfig {
     public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory connectionFactory) {
         return new StringRedisTemplate(connectionFactory);
     }
-
 }

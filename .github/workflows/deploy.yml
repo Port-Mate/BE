@@ -1,0 +1,131 @@
+name: GCP Artifact Registry 자동 배포
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGION: us-central1
+  IMAGE_NAME: portmate-server
+  IMAGE_TAG: ${{ github.sha }}
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REPO_NAME: ${{ secrets.ARTIFACT_REPO }}
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: JDK 설정
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: JAR 빌드
+        run: ./gradlew clean bootJar -x test
+
+      - name: JAR 파일 확인
+        run: |
+          echo "JAR 파일 존재 여부 확인 중..."
+          ls -la build/libs/
+          if [ ! -f build/libs/PortMate-0.0.1-SNAPSHOT.jar ]; then
+            echo "JAR 파일을 찾을 수 없습니다."
+            exit 1
+          fi
+          echo "✅ JAR 파일 확인 완료"
+
+      - name: GCP 인증
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Docker 인증 구성
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Docker 이미지 빌드 및 푸시
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:latest"
+          echo "이미지 빌드 중: $IMAGE"
+          docker build -t $IMAGE .
+          docker push $IMAGE
+          echo "✅ Artifact Registry로 이미지 푸시 완료"
+
+  CD:
+    runs-on: ubuntu-latest
+    needs: CI
+
+    steps:
+      - name: 서버에 SSH 접속하여 Docker 실행
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            REGION=us-central1
+            IMAGE_NAME=portmate-server
+            PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}
+            REPO_NAME=${{ secrets.ARTIFACT_REPO }}
+
+            echo "==== GCP Artifact Registry 로그인 ===="
+            echo '${{ secrets.GCP_SA_KEY }}' > gcp_sa_key.json
+            cat gcp_sa_key.json | sudo docker login -u _json_key --password-stdin https://$REGION-docker.pkg.dev
+            rm -f gcp_sa_key.json
+
+            echo "==== 기존 컨테이너 정리 ===="
+            sudo docker stop portmate kafka zookeeper redis || true
+            sudo docker rm portmate kafka zookeeper redis || true
+
+            echo "==== Docker 네트워크 생성 ===="
+            sudo docker network create portmate-net || true
+
+            echo "==== Redis 실행 ===="
+            sudo docker run -d --name redis --network portmate-net \
+              -p 6379:6379 --restart always \
+              redis:latest redis-server --appendonly yes --requirepass 1234
+
+            echo "==== Zookeeper 실행 ===="
+            sudo docker run -d --name zookeeper --network portmate-net \
+              -p 2181:2181 --restart always wurstmeister/zookeeper:latest
+
+            echo "==== Kafka 실행 ===="
+            sudo docker run -d --name kafka --network portmate-net \
+              -p 9092:9092 --restart always \
+              -e KAFKA_BROKER_ID=1 \
+              -e KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181 \
+              -e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 \
+              -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092 \
+              -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT \
+              -e KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT \
+              -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
+              -e KAFKA_DEFAULT_REPLICATION_FACTOR=1 \
+              -e KAFKA_AUTO_CREATE_TOPICS_ENABLE=true \
+              wurstmeister/kafka:latest
+
+            echo "==== Kafka 초기화 대기 (10초) ===="
+            sleep 10
+
+            echo "==== 최신 PortMate 이미지 Pull ===="
+            sudo docker pull us-central1-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:latest
+
+            echo "==== PortMate 실행 ===="
+            sudo docker run -d --name portmate --network portmate-net \
+              -p 8080:8080 --restart always \
+              -e SPRING_PROFILES_ACTIVE=prod \
+              -e SPRING_CONFIG_LOCATION=classpath:/application.yml \
+              -e SPRING_DATA_REDIS_HOST=redis \
+              -e SPRING_DATA_REDIS_PORT=6379 \
+              -e SPRING_DATA_REDIS_PASSWORD=1234 \
+              -e SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092 \
+              -e DATABASE_PASSWORD='${{ secrets.DATABASE_PASSWORD }}' \
+              -e FIREBASE_JSON='${{ secrets.FIREBASE_JSON }}' \
+              -e PROJECT_ID='${{ secrets.GCP_PROJECT_ID }}' \
+              -e REPO_NAME='${{ secrets.ARTIFACT_REPO }}' \
+              us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO }}/portmate-server:latest
+
+            echo "✅ 배포 완료 (Redis + Kafka + Spring 모두 portmate-net 내 연결됨)"

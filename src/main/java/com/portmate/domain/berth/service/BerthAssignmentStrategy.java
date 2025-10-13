@@ -21,98 +21,98 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BerthAssignmentStrategy {
 
-    public List<AssignedShipResponse> assign(
-            List<ScheduleContent> scheduleContents,
-            String portName,
-            List<Pier> availablePiers,
-            Map<String, List<Berth>> pierToBerths
-    ) {
-        List<AssignedShipResponse> result = new ArrayList<>();
-        Map<String, List<AssignmentSlot>> berthScheduleMap = new HashMap<>();
+	public List<AssignedShipResponse> assign(
+		List<ScheduleContent> scheduleContents,
+		String portName,
+		List<Pier> availablePiers,
+		Map<String, List<Berth>> pierToBerths
+	) {
+		List<AssignedShipResponse> result = new ArrayList<>();
+		Map<String, List<AssignmentSlot>> berthScheduleMap = new HashMap<>();
 
-        scheduleContents.sort(
-                Comparator
-                        .comparing((ScheduleContent v) -> DateParser.parse(v.getEta()))
-                        .thenComparing(v -> parseIMO(v.getImoOrCallSign()))
-        );
+		scheduleContents.sort(
+			Comparator
+				.comparing((ScheduleContent v) -> DateParser.parse(v.getEta()))
+				.thenComparing(v -> parseIMO(v.getImoOrCallSign()))
+		);
 
-        for (ScheduleContent schedule : scheduleContents) {
-            String vesselName = schedule.getVesselName();
-            String cargoType = schedule.getCargoType();
-            LocalDateTime eta = DateParser.parse(schedule.getEta());
-            LocalDateTime etd = DateParser.parse(schedule.getEtd());
+		for (ScheduleContent schedule : scheduleContents) {
+			String vesselName = schedule.getVesselName();
+			String cargoType = schedule.getCargoType();
+			LocalDateTime eta = DateParser.parse(schedule.getEta());
+			LocalDateTime etd = DateParser.parse(schedule.getEtd());
 
-            ShipType shipType = mapToShipType(cargoType);
-            PortRegion region = mapToRegion(portName);
+			ShipType shipType = mapToShipType(cargoType);
+			PortRegion region = mapToRegion(portName);
 
-            List<Pier> eligiblePiers = availablePiers.stream()
-                    .filter(p -> p.getRegion() == region)
-                    .filter(p -> p.getAcceptedShipTypes().contains(shipType))
-                    .toList();
+			List<Pier> eligiblePiers = availablePiers.stream()
+				.filter(p -> p.getRegion() == region)
+				.filter(p -> p.getAcceptedShipTypes().contains(shipType))
+				.toList();
 
-            Berth assignedBerth = null;
-            Pier assignedPier = null;
-            LocalDateTime finalEta = eta;
-            LocalDateTime finalEtd = etd;
+			Berth assignedBerth = null;
+			Pier assignedPier = null;
+			LocalDateTime finalEta = eta;
+			LocalDateTime finalEtd = etd;
 
-            AssignmentSlot bestSlot = null;
-            Berth bestBerth = null;
-            Pier bestPier = null;
-            Duration minDelay = null;
+			AssignmentSlot bestSlot = null;
+			Berth bestBerth = null;
+			Pier bestPier = null;
+			Duration minDelay = null;
 
-            for (Pier pier : eligiblePiers) {
-                List<Berth> candidateBerths = pierToBerths.getOrDefault(pier.getId(), List.of());
+			for (Pier pier : eligiblePiers) {
+				List<Berth> candidateBerths = pierToBerths.getOrDefault(pier.getId(), List.of());
 
-                for (Berth berth : candidateBerths) {
-                    List<AssignmentSlot> slots = berthScheduleMap.getOrDefault(berth.getId(), new ArrayList<>());
-                    AssignmentSlot adjustedSlot = adjustTimeSlot(slots, eta, etd);
+				for (Berth berth : candidateBerths) {
+					List<AssignmentSlot> slots = berthScheduleMap.getOrDefault(berth.getId(), new ArrayList<>());
+					AssignmentSlot adjustedSlot = adjustTimeSlot(slots, eta, etd);
 
-                    if (adjustedSlot != null) {
-                        Duration delay = Duration.between(eta, adjustedSlot.eta());
-                        if (minDelay == null || delay.compareTo(minDelay) < 0) {
-                            minDelay = delay;
-                            bestSlot = adjustedSlot;
-                            bestBerth = berth;
-                            bestPier = pier;
-                        }
-                        // 완벽히 겹치지 않는 슬롯 발견 시 즉시 종료
-                        if (delay.isZero()) break;
-                    }
-                }
+					if (adjustedSlot != null) {
+						Duration delay = Duration.between(eta, adjustedSlot.eta());
+						if (minDelay == null || delay.compareTo(minDelay) < 0) {
+							minDelay = delay;
+							bestSlot = adjustedSlot;
+							bestBerth = berth;
+							bestPier = pier;
+						}
+						// 완벽히 겹치지 않는 슬롯 발견 시 즉시 종료
+						if (delay.isZero()) break;
+					}
+				}
 
-                if (minDelay != null && minDelay.isZero()) break;
-            }
+				if (minDelay != null && minDelay.isZero()) break;
+			}
 
-            if (bestBerth != null && bestSlot != null) {
-                assignedBerth = bestBerth;
-                assignedPier = bestPier;
-                finalEta = bestSlot.eta();
-                finalEtd = bestSlot.etd();
+			if (bestBerth != null && bestSlot != null) {
+				assignedBerth = bestBerth;
+				assignedPier = bestPier;
+				finalEta = bestSlot.eta();
+				finalEtd = bestSlot.etd();
 
-                List<AssignmentSlot> slots = berthScheduleMap.getOrDefault(bestBerth.getId(), new ArrayList<>());
-                slots.add(bestSlot);
-                berthScheduleMap.put(bestBerth.getId(), slots);
-                
-                // ScheduleContent에 pier, berth, 조정된 시간 반영
-                schedule.setPier(assignedPier.getPierName());
-                schedule.setBerth(assignedBerth.getName());
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-                schedule.setEta(finalEta.format(formatter));
-                schedule.setEtd(finalEtd.format(formatter));
-            }
+				List<AssignmentSlot> slots = berthScheduleMap.getOrDefault(bestBerth.getId(), new ArrayList<>());
+				slots.add(bestSlot);
+				berthScheduleMap.put(bestBerth.getId(), slots);
 
-            result.add(new AssignedShipResponse(
-                    vesselName,
-                    cargoType,
-                    assignedPier != null ? assignedPier.getPierName() : "배정 불가",
-                    assignedBerth != null ? assignedBerth.getName() : "-",
-                    finalEta,
-                    finalEtd
-            ));
-        }
+				// ScheduleContent에 pier, berth, 조정된 시간 반영
+				schedule.setPier(assignedPier.getPierName());
+				schedule.setBerth(assignedBerth.getName());
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+				schedule.setEta(finalEta.format(formatter));
+				schedule.setEtd(finalEtd.format(formatter));
+			}
 
-        return result;
-    }
+			result.add(new AssignedShipResponse(
+				vesselName,
+				cargoType,
+				assignedPier != null ? assignedPier.getPierName() : "배정 불가",
+				assignedBerth != null ? assignedBerth.getName() : "-",
+				finalEta,
+				finalEtd
+			));
+		}
+
+		return result;
+	}
 
 	private AssignmentSlot adjustTimeSlot(List<AssignmentSlot> slots,
 		LocalDateTime eta,

@@ -1,27 +1,34 @@
 package com.portmate.global.config;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
-
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.messaging.FirebaseMessaging;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class FirebaseConfig {
-	//TODO: 배포환경 경로 시크릿에서 주입할거
+
+	@Value("${firebase.json}")
+	private String firebaseJson;
+
 	@Bean
 	public FirebaseMessaging firebaseMessaging() throws IOException {
-		InputStream serviceAccount =
-			new ClassPathResource("firebase.json").getInputStream();
+		if (firebaseJson == null || firebaseJson.isBlank()) {
+			throw new IllegalStateException("Firebase JSON 환경변수(FIREBASE_JSON)가 설정되지 않았습니다.");
+		}
+
+		ByteArrayInputStream serviceAccountStream =
+			new ByteArrayInputStream(firebaseJson.getBytes(StandardCharsets.UTF_8));
 
 		FirebaseOptions options = FirebaseOptions.builder()
-			.setCredentials(GoogleCredentials.fromStream(serviceAccount))
+			.setCredentials(GoogleCredentials.fromStream(serviceAccountStream))
 			.build();
 
 		FirebaseApp app;
@@ -34,4 +41,3 @@ public class FirebaseConfig {
 		return FirebaseMessaging.getInstance(app);
 	}
 }
-
