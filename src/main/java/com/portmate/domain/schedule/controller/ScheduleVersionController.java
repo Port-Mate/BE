@@ -1,5 +1,6 @@
 package com.portmate.domain.schedule.controller;
 
+import com.portmate.docs.ScheduleVersionControllerDocs;
 import com.portmate.domain.schedule.dto.*;
 import com.portmate.domain.schedule.service.ScheduleVersionService;
 import com.portmate.global.auth.CustomUserDetails;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/schedule-versions")
-public class ScheduleVersionController {
+public class ScheduleVersionController implements ScheduleVersionControllerDocs {
     
     private final ScheduleVersionService scheduleVersionService;
     

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.portmate.docs.FcmTokenControllerDocs;
 import com.portmate.domain.notification.dto.FcmTokenRequest;
 import com.portmate.domain.notification.service.FcmService;
 import com.portmate.domain.notification.service.UserFcmTokenService;
@@ -19,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/fcm")
-public class FcmTokenController {
+public class FcmTokenController implements FcmTokenControllerDocs {
 
 
 	private final UserFcmTokenService tokenService;

@@ -1,5 +1,6 @@
 package com.portmate.domain.schedule.controller;
 
+import com.portmate.docs.ScheduleControllerDocs;
 import com.portmate.domain.berth.service.BerthAssignmentService;
 import com.portmate.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.portmate.domain.schedule.dto.response.AssignedShipResponse;
@@ -19,7 +20,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/schedule")
-public class ScheduleController {
+public class ScheduleController implements ScheduleControllerDocs {
     private final ScheduleService scheduleService;
     private final BerthAssignmentService berthAssignmentService;
 

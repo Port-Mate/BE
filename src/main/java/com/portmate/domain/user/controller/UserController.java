@@ -1,5 +1,6 @@
 package com.portmate.domain.user.controller;
 
+import com.portmate.docs.UserControllerDocs;
 import com.portmate.domain.user.dto.RegisterRequest;
 import com.portmate.domain.user.dto.UserInfoResponse;
 import com.portmate.domain.user.dto.UserStatusRequest;
@@ -25,7 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/users")
 @Validated
-public class UserController {
+public class UserController implements UserControllerDocs {
     private final UserService userService;
 
     @GetMapping("/me")
