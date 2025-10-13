@@ -1,5 +1,7 @@
 package com.portmate.global.kafka.config;
 
+import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -27,7 +29,7 @@ public class KafkaConfig {
 		config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 		config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 		config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-		config.put(ProducerConfig.ACKS_CONFIG, "1"); // 단일 브로커 환경을 위해 '1'로 변경
+		config.put(ProducerConfig.ACKS_CONFIG, "1");
 		return new DefaultKafkaProducerFactory<>(config);
 	}
 
@@ -52,7 +54,19 @@ public class KafkaConfig {
 		ConcurrentKafkaListenerContainerFactory<String, String> factory =
 			new ConcurrentKafkaListenerContainerFactory<>();
 		factory.setConsumerFactory(consumerFactory());
-		factory.setConcurrency(3);
+		factory.setConcurrency(1);
 		return factory;
+	}
+
+	@Bean
+	public KafkaAdmin kafkaAdmin() {
+		Map<String, Object> config = new HashMap<>();
+		config.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+		return new KafkaAdmin(config);
+	}
+
+	@Bean
+	public NewTopic notificationTopic() {
+		return new NewTopic("notification-topic", 1, (short) 1);
 	}
 }
