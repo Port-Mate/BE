@@ -6,7 +6,7 @@ spring:
     type: redis
   data:
     mongodb:
-      uri: mongodb+srv://gijin22:IvLi4bufDsTLGeEY@cluster0.uwirm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      uri: mongodb+srv://gijin22:${DATABASE_PASSWORD}@cluster0.uwirm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
       database: portmate
     redis:
       host: localhost
