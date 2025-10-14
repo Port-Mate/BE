@@ -40,8 +40,13 @@ public class CustomScheduleRepositoryImpl implements CustomScheduleRepository {
                                 Criteria.where("startDt").lte(endDate),
                                 Criteria.where("endDt").gte(startDate),
                                 Criteria.where("port").is(port),
-                                Criteria.where("scheduleContents.pier").is(pier),
-                                Criteria.where("scheduleContents.berth").is(berth)
+                                Criteria.where("scheduleContents").elemMatch(
+                                    new Criteria()
+                                        .andOperator(
+                                            Criteria.where("pier").is(pier),
+                                            Criteria.where("berth").is(berth)
+                                        )
+                                )
                         )
         );
         

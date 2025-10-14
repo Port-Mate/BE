@@ -57,14 +57,18 @@ public class ScheduleServiceImpl implements ScheduleService{
         if (schedule == null) {
             throw new ScheduleNotFoundException();
         }
-        List<TimeTableWrapper> items = toTimeTable(schedule);
+        List<TimeTableWrapper> items = toTimeTable(schedule, pier, berth);
         return ScheduleListResponse.from(schedule, items);
     }
 
-    private List<TimeTableWrapper> toTimeTable(Schedule schedule) {
+    private List<TimeTableWrapper> toTimeTable(Schedule schedule, String pier, String berth) {
         Map<String, List<TimeTableContent>> groupedByDate = new TreeMap<>();
 
         for (ScheduleContent sc : schedule.getScheduleContents()) {
+            // 해당 부두/선석의 선박만 필터링
+            if (!pier.equals(sc.getPier()) || !berth.equals(sc.getBerth())) {
+                continue;
+            }
 
             // ETA (입항)
             if (sc.getEta() != null) {
