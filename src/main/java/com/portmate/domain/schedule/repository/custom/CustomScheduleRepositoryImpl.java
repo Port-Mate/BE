@@ -32,24 +32,20 @@ public class CustomScheduleRepositoryImpl implements CustomScheduleRepository {
 
     @Override
     public Schedule findByListParams(LocalDate startDate, LocalDate endDate, String port ,String pier, String berth) {
-        LocalDateTime startOfDay = startDate.atStartOfDay();
-        LocalDateTime endOfDay = endDate.plusDays(1).atStartOfDay(); // endDate의 하루 끝까지 포함
 
-        // LocalDate를 Date로 변환
-        java.util.Date startDateConverted = java.sql.Date.valueOf(startDate);
-        java.util.Date endDateConverted = java.sql.Date.valueOf(endDate.plusDays(1));
-
+        
         Query query = new Query(
                 new Criteria()
                         .andOperator(
-                                Criteria.where("startDt").gte(startDateConverted),
-                                Criteria.where("endDt").lt(endDateConverted),
+                                Criteria.where("startDt").lte(endDate),
+                                Criteria.where("endDt").gte(startDate),
                                 Criteria.where("port").is(port),
                                 Criteria.where("scheduleContents.pier").is(pier),
                                 Criteria.where("scheduleContents.berth").is(berth)
                         )
         );
-
-        return mongoTemplate.findOne(query, Schedule.class);
+        
+        Schedule result = mongoTemplate.findOne(query, Schedule.class);
+        return result;
     }
 }

@@ -13,6 +13,6 @@ import java.util.Date;
 public class DateToLocalDateTimeKstConverter implements Converter<Date, LocalDateTime> {
     @Override
     public LocalDateTime convert(Date date) {
-        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().minusHours(9);
+        return date.toInstant().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime();
     }
 }
